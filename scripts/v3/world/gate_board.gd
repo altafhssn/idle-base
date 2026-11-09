@@ -70,7 +70,7 @@ func setup(sim: Node) -> void:
 	rotation.y = Layout3.GATE_BOARD_YAW
 	if ResourceLoader.exists(FONT_PATH):
 		_font = load(FONT_PATH) as Font
-	if ResourceLoader.exists(Models.DIR + "seats_board.glb"):
+	if Models.exists("seats_board"):
 		_model = Models.make("seats_board")
 	else:
 		_model = _make_fallback()

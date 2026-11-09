@@ -31,8 +31,8 @@ const POSES := ["idle", "cheer", "worried", "point", "namaste", "ledger"]
 ## 2D narrator art, cut from the owner's character sheet: one PNG per pose,
 ## each RECT-sized and drawn 1:1, head centre at _head_px(), hair top 58 px
 ## down, mirrored so the gestures reach towards screen centre.
-const SPRITE_PATH := "res://assets/textures/narrator/narrator_%s.png"
-## Rani's 3D busts: rani_<pose>.glb in Models.DIR.
+static var SPRITE_PATH: String = ThemePack.textures_dir() + "narrator/narrator_%s.png"
+## Rani's 3D busts: rani_<pose>.glb in the pack's models (Models.exists).
 const MODEL_PREFIX := "rani_"
 ## Framing (fix 0.3.4: the old square 576 px view, fitted to the idle pose,
 ## was only ±0.81 m wide around the head, so the point / ledger / cheer arms
@@ -498,15 +498,15 @@ func _build_world() -> void:
 
 ## True when Rani's 3D busts are in the build (the idle one decides).
 static func has_rani_models() -> bool:
-	return ResourceLoader.exists(Models.DIR + MODEL_PREFIX + "idle.glb")
+	return Models.exists(MODEL_PREFIX + "idle")
 
 
 func _make_pose(pose: String) -> Node3D:
 	var id := MODEL_PREFIX + pose
-	if not ResourceLoader.exists(Models.DIR + id + ".glb"):
+	if not Models.exists(id):
 		id = "munshi_" + pose
 	var m: Node3D
-	if ResourceLoader.exists(Models.DIR + id + ".glb"):
+	if Models.exists(id):
 		m = Models.make(id)
 	else:
 		m = _placeholder(pose)

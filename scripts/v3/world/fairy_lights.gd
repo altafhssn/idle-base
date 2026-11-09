@@ -9,7 +9,7 @@ extends Node
 ##   a >= 0.5: chase, step = round(4 * (2a - 1)) = 0..3 along the string
 ## This driver gives every such node one of two POOLED ShaderMaterials (one
 ## for twinkling strings, one for chase strings - shared by all nodes, built
-## once from res://assets/models/fairy_bulb_material.tres). The shader runs the
+## once from the pack's models/fairy_bulb_material.tres). The shader runs the
 ## animation on the GPU from TIME: brightness 0.6..1.0 at 1.5..3 Hz per bulb,
 ## chase strings step every 0.18 s, a x1.25 boost so the bulbs read slightly
 ## brighter than the daylight scene (always on). No lights, no per-bulb nodes,
@@ -18,7 +18,7 @@ extends Node
 ## API: attach(root) -> int (strings found), set_brightness(low, high),
 ## set_boost(boost) (day / night cycle), set_speed(mult), strings.
 
-const MATERIAL_PATH := "res://assets/models/fairy_bulb_material.tres"
+static var MATERIAL_PATH: String = ThemePack.models_dir() + "fairy_bulb_material.tres"
 const PREFIX := "fairy_bulb_"
 ## Strings that run a chase pattern (the rest twinkle).
 const CHASE_KEYS := ["sign_top", "sign_bottom", "gate_board", "parking_board", "gumti"]

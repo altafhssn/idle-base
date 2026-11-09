@@ -223,7 +223,7 @@ func _add_slot() -> void:
 	var pivot := Node3D.new()
 	pivot.name = "Bill%d" % _pivots.size()
 	var model: Node3D
-	if ResourceLoader.exists(Models.DIR + MODEL_ID + ".glb"):
+	if Models.exists(MODEL_ID):
 		model = Models.make(MODEL_ID)
 	else:
 		model = _fallback_card()

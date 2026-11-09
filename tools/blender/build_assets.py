@@ -2,7 +2,7 @@
 
 Run headless (from the project root):
   /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
-      -P tools/blender/build_assets.py -- assets/models [--sheet docs/art/asset_sheet.png]
+      -P tools/blender/build_assets.py -- themes/dhaba/models [--sheet docs/art/asset_sheet.png]
 
 Every asset is built from primitives into one mesh, flat shaded, UV-mapped onto
 a shared 48-swatch palette atlas (one material, one texture), and exported as
@@ -1997,7 +1997,7 @@ def v3_budget(name):
 
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    outdir = os.path.abspath(argv[0] if argv else "assets/models")
+    outdir = os.path.abspath(argv[0] if argv else "themes/dhaba/models")
     sheet = None
     if "--sheet" in argv:
         sheet = os.path.abspath(argv[argv.index("--sheet") + 1])

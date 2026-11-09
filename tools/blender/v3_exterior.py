@@ -50,8 +50,8 @@ FAIRY LIGHTS (for the fixer)
         a <  0.5 : twinkle, phase = 2a (0..1, random per bulb)
         a >= 0.5 : chase,   step  = round(4 * (2a - 1)) in 0..3 along the string
   * To animate: give every fairy_bulb_* MeshInstance3D the shared material
-        res://assets/models/fairy_bulb_material.tres   (ShaderMaterial, shader
-        res://assets/models/fairy_bulb.gdshader: brightness 0.6..1.0 at 1.5..3 Hz with the
+        res://themes/dhaba/models/fairy_bulb_material.tres   (ShaderMaterial, shader
+        res://themes/dhaba/models/fairy_bulb.gdshader: brightness 0.6..1.0 at 1.5..3 Hz with the
         per-bulb phase, chase strings step every 0.18 s, x1.25 boost so they read brighter
         than the lit scene). One draw call per node, no per-frame CPU work, no lights.
   * Chase strings: fairy_bulb_sign_top, fairy_bulb_sign_bottom, fairy_bulb_gate_board,

@@ -6,7 +6,8 @@ extends Node
 ##
 ## ALL money is in REFERENCE units (start cash 100, first chai 1.00). The UI
 ## shows it x10 through Fmt (scripts/v3/core/fmt.gd). Tuning lives in
-## res://data/economy_v3.json, mirrored by tools/sim/pacing_v3.py.
+## the theme pack's economy.json (res://themes/dhaba/economy.json for the dhaba),
+## mirrored by tools/sim/pacing_v3.py.
 ##
 ## Who calls what:
 ##  - Station nodes: price(id) to lock a traveller's price when service ends,
@@ -309,7 +310,7 @@ const ECO_NORMALISED := 4
 const ECO_NOTE_MIGRATED := "eco4_migrated"
 ## notes: Munshi-ji's "New prices!" line (script_lines "eco4_reset") was said.
 const ECO_NOTE_SAID := "eco4_reset"
-const ECONOMY_PATH := "res://data/economy_v3.json"
+## The economy is the theme pack's economy.json (ThemePack.economy_path()).
 const AUTOSAVE_SECONDS := 10.0
 const SAVE_DEBOUNCE := 1.5          # purchases save shortly after the last tap
 const STATS_SAMPLE_SECONDS := 0.5
@@ -446,7 +447,7 @@ const FAST_RATE_EMIT_REL := 0.005
 const LOCATION_HOME := "nh44"
 
 var eco: Dictionary = {}
-## C6.3: the economy as loaded from ECONOMY_PATH; eco = this with the current
+## C6.3: the economy as loaded from the pack (ThemePack.economy_path()); eco = this with the current
 ## location's station overlay applied (_apply_location).
 var _base_eco: Dictionary = {}
 
@@ -722,11 +723,11 @@ var _debug_away: float = -1.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	var parsed: Variant = _load_json(ECONOMY_PATH)
+	var parsed: Variant = _load_json(ThemePack.economy_path())
 	if parsed is Dictionary:
 		eco = parsed
 	if eco.is_empty():
-		push_error("Game: %s missing or invalid" % ECONOMY_PATH)
+		push_error("Game: %s missing or invalid" % ThemePack.economy_path())
 	_base_eco = eco
 	_popups_this_launch = 0
 	_parse_debug_args()
@@ -5699,7 +5700,10 @@ func location_signs() -> Dictionary:
 
 ## The palette texture that recolours the world ("" = the usual one).
 func palette_override() -> String:
-	return str(location_def().get("palette", ""))
+	# A pack-relative path ("models/palette_nh48.png") resolves inside the
+	# theme pack; a full res:// path is taken as it is.
+	var p: String = str(location_def().get("palette", ""))
+	return ThemePack.file(p) if p != "" and not p.begins_with("res://") else p
 
 
 ## Step 4: a reveal is waiting for the new scene (the tutorial waits for it).

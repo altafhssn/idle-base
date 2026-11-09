@@ -1,9 +1,13 @@
 class_name Models
 extends RefCounted
-## Loads Blender-exported .glb models from res://assets/models/.
-## Falls back to a coloured box so the game runs before an asset exists.
+## Loads .glb models from the running theme pack (ThemePack.models_dir(),
+## res://themes/<id>/models/), then from the kit's own models
+## (ThemePack.ENGINE_DIR + "models/"). Falls back to a coloured box so the
+## game runs before an asset exists, and prints "[pack] missing model '<id>'"
+## once per id (the test suite fails on it: a pack must ship every model the
+## game asks for).
 
-const DIR := "res://assets/models/"
+static var _missing := {}
 
 static var _cache := {}
 ## Palette material sharing (build optimisation, docs/optimise/report.md):
@@ -21,10 +25,28 @@ static var _shared_done := {}
 static var _seen := {}
 
 
+## res:// path of model `id` (the pack's first, then the kit's), "" when
+## neither has it.
+static func path_of(id: String) -> String:
+	var p: String = ThemePack.models_dir() + id + ".glb"
+	if ResourceLoader.exists(p):
+		return p
+	p = ThemePack.ENGINE_DIR + "models/" + id + ".glb"
+	return p if ResourceLoader.exists(p) else ""
+
+
+## True when model `id` exists in the pack or the kit.
+static func exists(id: String) -> bool:
+	return path_of(id) != ""
+
+
 static func make(id: String, fallback_size := Vector3(0.6, 0.6, 0.6), fallback_color := Color.HOT_PINK) -> Node3D:
 	if not _cache.has(id):
-		var path := DIR + id + ".glb"
-		_cache[id] = load(path) if ResourceLoader.exists(path) else null
+		var path := path_of(id)
+		_cache[id] = load(path) if path != "" else null
+		if path == "" and not _missing.has(id):
+			_missing[id] = true
+			print("[pack] missing model '%s' (theme %s)" % [id, ThemePack.id()])
 	var ps: PackedScene = _cache[id]
 	if ps != null:
 		var n: Node3D = ps.instantiate()

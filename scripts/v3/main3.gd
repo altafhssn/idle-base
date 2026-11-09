@@ -323,6 +323,9 @@ var _win_bus_riders0: int = 0
 var _win_done: bool = false
 
 var _tap_check: bool = false
+## --check-pack (Idle Business Kit): PackCheck.run() on the theme pack, then quit
+## with the number of failed checks.
+var _check_pack: bool = false
 ## Menu-expansion + station-menus models (docs/v3-station-menus.md §10.1)
 ## and the core-and-feel models of build plan section 4 (props, buildings,
 ## people, NH 48 dishes); --capture=menu lists the missing ones.
@@ -543,6 +546,8 @@ func _start_debug_flags() -> void:
 		_run_zoom_test.call_deferred()
 	if _tap_check:
 		_run_tap_check.call_deferred()
+	if _check_pack:
+		_run_check_pack.call_deferred()
 	if _auto:
 		dialogue.line_typed.connect(_on_auto_line_typed)
 		ui.panel_opened.connect(func(n: String) -> void: print("[auto] %.2f panel opened: %s" % [_game_t, n]))
@@ -1118,6 +1123,8 @@ func _parse_cmdline() -> void:
 			_buy = arg.get_slice("=", 1).split(",", false)
 		elif arg.begins_with("--capture="):
 			_capture = arg.get_slice("=", 1)
+		elif arg == "--check-pack":
+			_check_pack = true
 		elif arg.begins_with("--seed="):
 			Sim.debug_seed = maxi(0, int(arg.get_slice("=", 1)))
 		elif arg.begins_with("--arrivals="):
@@ -2386,6 +2393,11 @@ const TAP_RESULT := 0.35
 const TAP_CENTRE := 0.7
 
 
+func _run_check_pack() -> void:
+	var fails: int = PackCheck.run()
+	get_tree().quit(fails)
+
+
 ## --tap-check: docs/v3-station-menus.md §11.6 (stages A, B, C, D; the
 ## bhurji / dal stages C / C2 / D of the menu expansion are gone with those
 ## stations). Quits with exit code = the number of failed points.
@@ -2664,7 +2676,7 @@ func _menu_capture() -> void:
 	DirAccess.make_dir_recursive_absolute(_globalize(_shot_dir))
 	var missing: Array = []
 	for m in MENU_MODELS:
-		if not ResourceLoader.exists("res://assets/models/%s.glb" % str(m)):
+		if not Models.exists(str(m)):
 			missing.append(str(m))
 	print("MODELS missing: %s" % str(missing))
 	await _game_wait(0.5)

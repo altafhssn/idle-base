@@ -15,7 +15,7 @@ staff, seats or bays, checkout, customers); the pack names and draws them.
 | # | Phase | State |
 |---|---|---|
 | 1 | Template repo and test harness | Done (see below) |
-| 2 | Pack loader and checker | Not started |
+| 2 | Pack loader and checker | Done (see below) |
 | 3 | Names out of the code | Not started |
 | 4 | Layouts from markers | Not started |
 | 5 | Switchable systems | Not started |
@@ -45,6 +45,34 @@ Q=/path/to/scratch/qa; mkdir -p $Q; cp tools/testkit/qa/*.sh tools/testkit/qa/*.
 cp -R tools/testkit/qa/logs/baseline_cart $Q/logs/baseline
 bash $Q/mkslot.sh main "$(pwd)" && bash $Q/import.sh main && bash $Q/suite.sh main main
 ```
+
+## Phase 2: theme packs
+
+The game runs a **theme pack**: `themes/<id>/`. The dhaba is `themes/dhaba/`.
+
+```
+themes/dhaba/
+  theme.json      the game (name, package, version), systems on/off, business words
+  economy.json    prices, levels, staff, seats, checkout, pacing (was data/economy_v3.json)
+  models/         .glb models + their palettes (was assets/models)
+  audio/          sounds, file name = sound id (was assets/audio)
+  textures/       narrator sprites, previews (was assets/textures)
+```
+
+- **Picking a pack:** `--theme=<id>` after `--`, else the project setting
+  `idle_business_kit/theme` (`dhaba`), else `dhaba`.
+- **Code never builds a pack path itself:** `ThemePack` (`scripts/kit/theme_pack.gd`) serves
+  them; `Models.path_of(id)` / `Models.exists(id)` look in the pack, then the kit's own
+  `res://kit/models/`; `Sfx` likewise for sounds. A pack-relative path in the economy
+  (e.g. a location's `palette`) resolves inside the pack.
+- **Checker:** `--check-pack` runs `PackCheck` (`scripts/kit/pack_check.gd`): theme.json schema,
+  economy sections and stations, every model loads, every known sound exists. Prints
+  `PACKCHECK fails=N` and quits with N; the suite runs it as the `packcheck` job.
+- **While playing**, a model or sound the game asks for but the pack lacks prints
+  `[pack] missing model|sound '<id>'`; the suite fails on a missing model.
+- The tools (Blender builder, pacing simulator, sound scripts) write to and read from the pack.
+- Known gap for phase 3: the checker's sound list is still the dhaba's (chai pour, tandoor
+  slap...); it becomes per pack when names move out of the code.
 
 ## Ported fixes (Dhaba Rush <-> Idle Business Kit)
 

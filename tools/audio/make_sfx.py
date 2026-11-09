@@ -7,7 +7,7 @@ Run with Blender (its Python has numpy, and its `aud` module encodes the Ogg
 Vorbis music and ambience and the MP3 listening previews):
 
   /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
-      --python tools/audio/make_sfx.py -- assets/audio [--only a,b] [--preview docs/polish/audio]
+      --python tools/audio/make_sfx.py -- themes/dhaba/audio [--only a,b] [--preview docs/polish/audio]
 
 Without Blender (plain python3 + numpy) the .wav effects are still written;
 the .ogg files are skipped with a note.

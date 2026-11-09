@@ -1,0 +1,1756 @@
+{
+  "_comment": "Dhaba Rush v0.3 economy. ALL money values are in REFERENCE units (start cash 100, first chai 1.00); the UI multiplies by money_display_scale (10) via Fmt, so 1.00 shows as Rs 10. Numbers marked 'ref' are measured from the reference video (spec section 8); 'design' values fill spec section 9 gaps and are safe to tune. Read by scripts/autoload/game.gd and tools/sim/pacing_v3.py. ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): a real dhaba menu (chai 10, roti 20, lassi 50, egg bhurji 150 on screen), milestones x1.3 price / x1.8 level cost, rewards sized on the real takings without VIP (rewards.basis), offline only after 10 min away at 1/4 rate, and ONE difficulty dial on every post-tutorial cost (difficulty.cost_mult). A save from an older economy (its 'eco' < version) keeps every level, cook, waiter, table and dish; only its cash is capped (game.gd _migrate_economy).",
+  "version": 4,
+  "money_display_scale": 10,
+  "start": {
+    "_comment": "ref: 100 cash, 30 premium coins; hud_reveal 1 = the empty 1-row money pill only.",
+    "cash": 100.0,
+    "sikke": 30,
+    "hud_reveal": 1
+  },
+  "income": {
+    "_comment": "vip_mult ref (permanent x2 all income). remove_ads_mult is 1.0 to match the reference (PLAN.md once proposed 1.25; change here if wanted).",
+    "vip_mult": 2.0,
+    "remove_ads_mult": 1.0
+  },
+  "level_milestones": [
+    25,
+    50,
+    100,
+    150,
+    200,
+    250,
+    300
+  ],
+  "milestone_price_mult": 1.3,
+  "milestone_cost_mult": 1.8,
+  "_milestone_comment": "ref: level bar runs to 25, tasks at 25 and 50; Level Up cost 2.50 x 1.02^(L-1) measured for L1-12. design (spec 9.5): each milestone reached multiplies the station price by milestone_price_mult and its Level Up cost by milestone_cost_mult, and puts the next dish on the menu. ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): x1.3 price (was x2; 1.3 is the smallest multiplier that keeps MENU CHECK at 0 failures) and x1.8 level cost (was x4).",
+  "station_order": [
+    "chai",
+    "tandoor",
+    "lassi",
+    "kadai"
+  ],
+  "stations": {
+    "chai": {
+      "name": "CHAI COUNTER",
+      "noun": "chai counter",
+      "staff": [
+        "Pinky",
+        "Rinku",
+        "Sonu"
+      ],
+      "color": "#C4532F",
+      "enabled": true,
+      "start_built": true,
+      "build_cost": 0.0,
+      "requires": "",
+      "build_desc": "No trucker drives past a kettle on the boil. The heart of every dhaba.",
+      "price_base": 1.0,
+      "price_step": 0.07,
+      "processing_base": 2.0,
+      "processing_div": 1.025,
+      "processing_max": 30,
+      "proc_cost_base": 10.0,
+      "proc_cost_growth": 1.2,
+      "level_cost_base": 2.5,
+      "level_cost_growth": 1.02,
+      "max_level": 300,
+      "employees_start": 1,
+      "employees_max": 3,
+      "hire_cost_base": 10.0,
+      "hire_cost_growth": 6.0,
+      "serve_text": "Pour {n} cups of chai for travellers",
+      "build_text": "Build the {station}",
+      "menu_group": "drink",
+      "order_weight": 1.0,
+      "menu": [
+        {
+          "key": "chai",
+          "name": "CHAI",
+          "name_hi": "चाय",
+          "card_name": "Diesel Chai",
+          "from_level": 1,
+          "price_mult": 1.0,
+          "cook_mult": 1.0,
+          "item": "pass_plate",
+          "prop": "",
+          "desc": "Thick, dark and strong enough to jump-start a truck."
+        },
+        {
+          "key": "coffee",
+          "name": "COFFEE",
+          "name_hi": "कॉफ़ी",
+          "from_level": 25,
+          "price_mult": 1.5,
+          "cook_mult": 1.15,
+          "item": "pass_coffee",
+          "prop": "prop_coffee_kettle",
+          "desc": "Filter coffee in a steel tumbler, poured from a height like all good decisions.",
+          "serve_text": "Pour {n} cups of coffee"
+        },
+        {
+          "key": "green_tea",
+          "name": "GREEN TEA",
+          "name_hi": "ग्रीन टी",
+          "from_level": 50,
+          "price_mult": 2.0,
+          "cook_mult": 0.85,
+          "item": "pass_green_tea",
+          "prop": "prop_green_tea_jar",
+          "desc": "Leaves, hot water and a slice of lemon. The drivers call it diet chai.",
+          "serve_text": "Brew {n} cups of green tea"
+        },
+        {
+          "key": "kesar_doodh",
+          "name": "KESAR DOODH",
+          "name_hi": "केसर दूध",
+          "from_level": 100,
+          "price_mult": 2.4,
+          "cook_mult": 1.2,
+          "item": "pass_kesar_doodh",
+          "prop": "prop_milk_can",
+          "desc": "Hot saffron milk in a clay cup, pistachios on top. The nap comes free.",
+          "serve_text": "Serve {n} cups of kesar doodh"
+        }
+      ],
+      "price_step_late": 0.02,
+      "level_cost_mult_late": 0.6,
+      "_comment": "ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): price_step_late 0.02 = the price step from the first milestone (L25) on; the tutorial's 0.07 still applies below L25, so the tutorial is unchanged. level_cost_mult_late 0.6 = the Level Up cost factor from L25 on (the difficulty dial multiplies it too).",
+      "price_step_ramp_from": 13,
+      "price_step_ramp_to": 40,
+      "fan": "trav_techie"
+    },
+    "tandoor": {
+      "_comment": "design (spec 9.1 proposal): price x10 and processing x2 of chai; costs x10 of chai. Build 200 is ref. ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): roti 20 on screen (price_base 2.0, step 0.04 = 2 %), level 32 / speed + hire 200; build 200 unchanged (the tutorial builds it).",
+      "name": "TANDOOR",
+      "noun": "tandoor",
+      "staff": [
+        "Balwant",
+        "Gurmeet",
+        "Jassi"
+      ],
+      "color": "#D9822B",
+      "enabled": true,
+      "start_built": false,
+      "build_cost": 200.0,
+      "requires": "chai",
+      "build_desc": "Hot rotis off the clay walls for every hungry driver.",
+      "price_base": 2.0,
+      "price_step": 0.04,
+      "processing_base": 4.0,
+      "processing_div": 1.025,
+      "processing_max": 30,
+      "proc_cost_base": 20.0,
+      "proc_cost_growth": 1.2,
+      "level_cost_base": 3.2,
+      "level_cost_growth": 1.02,
+      "max_level": 300,
+      "employees_start": 1,
+      "employees_max": 3,
+      "hire_cost_base": 20.0,
+      "hire_cost_growth": 6.0,
+      "serve_text": "Bake {n} rotis in the tandoor",
+      "build_text": "Build the tandoor",
+      "menu_group": "dish",
+      "order_weight": 1.0,
+      "menu": [
+        {
+          "key": "roti",
+          "name": "ROTI",
+          "name_hi": "रोटी",
+          "card_name": "Jali Roti",
+          "from_level": 1,
+          "price_mult": 1.0,
+          "cook_mult": 1.0,
+          "item": "pass_roti",
+          "prop": "",
+          "desc": "Slightly charred on one side. The drivers call it smoky flavour."
+        },
+        {
+          "key": "naan",
+          "name": "NAAN",
+          "name_hi": "नान",
+          "from_level": 25,
+          "price_mult": 1.5,
+          "cook_mult": 1.1,
+          "item": "pass_naan",
+          "prop": "prop_naan_basket",
+          "desc": "Puffed and blistered, pressed onto the hot clay by hand. Butter optional, never refused.",
+          "serve_text": "Bake {n} naans in the tandoor"
+        },
+        {
+          "key": "keema_paratha",
+          "name": "KEEMA PARATHA",
+          "name_hi": "कीमा पराठा",
+          "from_level": 50,
+          "price_mult": 2.0,
+          "cook_mult": 1.25,
+          "item": "pass_keema_paratha",
+          "prop": "prop_keema_pot",
+          "desc": "A paratha with a secret inside. The secret is keema.",
+          "serve_text": "Bake {n} keema parathas"
+        },
+        {
+          "key": "kulcha",
+          "name": "AMRITSARI KULCHA",
+          "name_hi": "अमृतसरी कुलचा",
+          "from_level": 100,
+          "price_mult": 2.4,
+          "cook_mult": 1.2,
+          "item": "pass_kulcha",
+          "prop": "prop_kulcha_board",
+          "desc": "Stuffed and crisp, Amritsar style. Worth parking a 22-wheeler for.",
+          "serve_text": "Bake {n} Amritsari kulchas"
+        }
+      ],
+      "fan": "trav_sardar"
+    },
+    "lassi": {
+      "_comment": "design 2026-10-20 (menu expansion, docs/v3-menu-expansion.md): the first drink after chai, cheapest build, unlocks after the tandoor. Price base 40 beats chai's price until chai L100 (31.4 at L99), so the build raises the bill (+28 % for the paced player, checked by tools/sim/pacing_v3.py); costs scale with the price like chai / tandoor (level 2.5x, speed + hire 10x). 2.5 s churn. Drink group, favoured 1.25 : 1 over chai. QA round 1 (2026-10-20): requires_waiters 2. Lassi orders are shorter whole-order trips (its pass is by the aisle), so the ramp raised arrivals ~8 % on a lone waiter already near 100 % busy: travellers lost to bus bursts on 2 table sets went 12 -> 38 over 36 runs of 600 s. With 2 waiters the waiters never bind there, so the build cannot add arrivals the floor cannot seat; waiter 2 costs 40 and its KAAM card (waiter_hire2) comes before build_lassi. Station menus 2026-10-21: build 300 (was 4,500): with the menus carrying the long tail the lassi is the first free-play goal, affordable ~2.5 min after the tutorial for the pacing bot with ads (docs/v3-station-menus.md §4). ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): lassi 50 on screen (price_base 5.0, step 0.1 = 2 %), level 90 / speed + hire 500, build 1,700 (170); the build raises the bill ~+48 % when it becomes affordable (BILL CHECK). The 0.3.2 numbers above are history.",
+      "name": "LASSI",
+      "name_hi": "लस्सी",
+      "noun": "lassi counter",
+      "staff": [
+        "Gopi",
+        "Neetu",
+        "Bittu"
+      ],
+      "color": "#3E8FB0",
+      "enabled": true,
+      "start_built": false,
+      "build_cost": 170.0,
+      "requires": "tandoor",
+      "requires_waiters": 2,
+      "build_desc": "Thick, chilled lassi from a clay pot, with a layer of cream on top.",
+      "menu_group": "drink",
+      "order_weight": 1.25,
+      "price_base": 5.0,
+      "price_step": 0.1,
+      "processing_base": 2.5,
+      "processing_div": 1.025,
+      "processing_max": 30,
+      "proc_cost_base": 50.0,
+      "proc_cost_growth": 1.2,
+      "level_cost_base": 9.0,
+      "level_cost_growth": 1.02,
+      "max_level": 300,
+      "employees_start": 1,
+      "employees_max": 3,
+      "hire_cost_base": 50.0,
+      "hire_cost_growth": 6.0,
+      "serve_text": "Make {n} glasses of lassi",
+      "build_text": "Build the lassi counter",
+      "menu": [
+        {
+          "key": "lassi",
+          "name": "LASSI",
+          "name_hi": "लस्सी",
+          "card_name": "Meethi Lassi",
+          "from_level": 1,
+          "price_mult": 1.0,
+          "cook_mult": 1.0,
+          "item": "pass_lassi",
+          "prop": "",
+          "desc": "Sweet, cold and thick enough to stand a spoon in. Mostly."
+        },
+        {
+          "key": "chaas",
+          "name": "CHAAS",
+          "name_hi": "छाछ",
+          "from_level": 25,
+          "price_mult": 1.5,
+          "cook_mult": 0.8,
+          "item": "pass_chaas",
+          "prop": "prop_chaas_jug",
+          "desc": "Salted buttermilk with roasted cumin. The cure for every highway lunch.",
+          "serve_text": "Pour {n} glasses of chaas"
+        },
+        {
+          "key": "mango_lassi",
+          "name": "MANGO LASSI",
+          "name_hi": "मैंगो लस्सी",
+          "from_level": 50,
+          "price_mult": 2.0,
+          "cook_mult": 1.1,
+          "item": "pass_mango_lassi",
+          "prop": "prop_mango_crate",
+          "desc": "Alphonso season in a glass. Gopi guards the crate personally.",
+          "serve_text": "Blend {n} mango lassis"
+        },
+        {
+          "key": "patiala",
+          "name": "PATIALA LASSI",
+          "name_hi": "पटियाला लस्सी",
+          "from_level": 100,
+          "price_mult": 2.4,
+          "cook_mult": 1.25,
+          "item": "pass_patiala",
+          "prop": "prop_patiala_glass",
+          "desc": "One glass, two hands, then a short nap in the cab.",
+          "serve_text": "Serve {n} glasses of Patiala lassi"
+        }
+      ],
+      "fan": "trav_farmer"
+    },
+    "kadai": {
+      "_comment": "design 2026-10-21 (station menus, docs/v3-station-menus.md): ONE iron kadai in the courtyard annex replaces the egg bhurji tawa and the dal makhani handi (station ids bhurji / dal are gone; an old save with either built loads as kadai, see the spec's save migration). Needs the lassi and 3 waiters (annex trips are longer, as before). Price base 600 = 2.1x the roti's price at the moment the pacing bot can afford it (tandoor ~L50-60, roti 270-290) and still above roti until tandoor L150 (454 at L149): the build raises the bill +41 % (ads) / +63 % (no ads) for the bot (BILL CHECK). Costs scale with the price like the others (level 2.5x, speed + hire 10x). 4.0 s per plate. Dish group, favoured 1.25 : 1 over the tandoor. Build 25,000 (Rs 2.5 L): affordable ~8.5 min after the tutorial for the bot with ads, ~10 min without (tools/sim/pacing_v3.py prints the exact times). Colour = the old dal's #9C3D2A (the bhurji's #E0A21B is the tandoor's family and #B5432C reads as the chai's #C4532F). Menu: egg bhurji -> dal makhani (L25) -> kadai paneer (L50) -> Pindi chole (L100). ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): egg bhurji 150 on screen (price_base 15.0, step 0.3 = 2 %), level 300 / speed + hire 1,500, build 10,000 (1000); the build raises the bill ~+29 % (BILL CHECK). The 0.3.2 numbers above are history.",
+      "name": "KADAI",
+      "name_hi": "कड़ाही",
+      "noun": "kadai",
+      "staff": [
+        "Shera",
+        "Kamla",
+        "Kishan"
+      ],
+      "color": "#9C3D2A",
+      "enabled": true,
+      "start_built": false,
+      "build_cost": 1000.0,
+      "requires": "lassi",
+      "requires_waiters": 3,
+      "build_desc": "A big iron kadai in the back kitchen. Egg bhurji first, then dal, paneer and chole.",
+      "menu_group": "dish",
+      "order_weight": 1.25,
+      "price_base": 15.0,
+      "price_step": 0.3,
+      "processing_base": 4.0,
+      "processing_div": 1.025,
+      "processing_max": 30,
+      "proc_cost_base": 150.0,
+      "proc_cost_growth": 1.2,
+      "level_cost_base": 30.0,
+      "level_cost_growth": 1.02,
+      "max_level": 300,
+      "employees_start": 1,
+      "employees_max": 3,
+      "hire_cost_base": 150.0,
+      "hire_cost_growth": 6.0,
+      "serve_text": "Cook {n} plates in the kadai",
+      "build_text": "Build the kadai",
+      "menu": [
+        {
+          "key": "bhurji",
+          "name": "EGG BHURJI",
+          "name_hi": "अंडा भुर्जी",
+          "card_name": "Anda Bhurji",
+          "from_level": 1,
+          "price_mult": 1.0,
+          "cook_mult": 1.0,
+          "item": "pass_bhurji",
+          "prop": "",
+          "desc": "Two eggs, one kadai, zero patience. Done before the horn stops."
+        },
+        {
+          "key": "dal",
+          "name": "DAL MAKHANI",
+          "name_hi": "दाल मखनी",
+          "from_level": 25,
+          "price_mult": 1.5,
+          "cook_mult": 1.15,
+          "item": "pass_dal",
+          "prop": "prop_dal_handi",
+          "desc": "Simmered since dawn, finished with butter. The ladle has seen things.",
+          "serve_text": "Serve {n} bowls of dal makhani"
+        },
+        {
+          "key": "paneer",
+          "name": "KADAI PANEER",
+          "name_hi": "कड़ाही पनीर",
+          "from_level": 50,
+          "price_mult": 2.0,
+          "cook_mult": 1.2,
+          "item": "pass_paneer",
+          "prop": "prop_paneer_block",
+          "desc": "Paneer, capsicum and a fistful of crushed spices. Shera's pride.",
+          "serve_text": "Cook {n} plates of kadai paneer"
+        },
+        {
+          "key": "chole",
+          "name": "PINDI CHOLE",
+          "name_hi": "पिंडी छोले",
+          "from_level": 100,
+          "price_mult": 2.4,
+          "cook_mult": 1.1,
+          "item": "pass_chole",
+          "prop": "prop_chole_sack",
+          "desc": "Dark Pindi chole with a squeeze of lime. Trucks slow down for the smell.",
+          "serve_text": "Serve {n} bowls of Pindi chole"
+        }
+      ],
+      "fan": "trav_elder"
+    }
+  },
+  "orders": {
+    "_comment": "design 2026-10-20 ORDER RULE (docs/v3-menu-expansion.md): a seated traveller orders one item from each group in this order (tickets, tray and bubble left to right): one DRINK (chai, or lassi once built) and, once any dish station is built, one DISH (roti, egg bhurji or dal makhani). A group is skipped while none of its stations is built (so chai only before the tandoor, exactly as before); group_chance < 1 would make the group optional. Within a group a built station is picked with probability order_weight / the summed weights of the group's built stations (station field 'order_weight'; group = station field 'menu_group'). No random draw is made while a group has one built station and chance 1 (the tutorial's pacing RNG is untouched). max_items is a sanity cap.",
+    "groups": [
+      "drink",
+      "dish"
+    ],
+    "group_chance": {
+      "drink": 1.0,
+      "dish": 1.0
+    },
+    "max_items": 2
+  },
+  "growth": {
+    "_comment": "Dhaba growth (6 Nov, docs/growth/plan.md): the chai cart (0), the tin shack (1), the dhaba (2). Positions never change between stages; each stage caps what can be hired and bought (a missing key keeps the dhaba's value). Step 4 (7 Nov): a new game starts on the cart (start_stage 0) and the tutorial builds the shack; saves without a stage stay on the dhaba.",
+    "start_stage": 0,
+    "_station_stage_comment": "Step 5 (7 Nov, owner): lassi opens with the shack. Behind the dhaba's build it came when chai already sold for more (tools/sim/pacing_v3.py --growth: bill -5 % even with a 5-minute build), so the dhaba unlocks after lassi and brings the kadai, a third waiter and more tables.",
+    "station_stage": {"chai": 0, "tandoor": 1, "lassi": 1, "kadai": 2},
+    "_builds_comment": "Step 3 (6 Nov): the next stage is bought (cost x the difficulty dial) when its requires are met and built over dur_s on the wall clock while the old place trades (a rewarded ad finishes it). The renovation and the highway move take dur_s too. Placeholder prices until the pacing pass (plan step 5).",
+    "builds": {
+      "_prices_comment": "Step 5 (7 Nov): the shack costs what the chai lesson leaves the tutorial player (76.61, so no top-up); the dhaba 450 (owner: a 5-minute build) is bought about 7.5 min after the tutorial with ads (9 without), opens about 12.5 (14), kadai about 16 (19) (pacing_v3.py --growth).",
+      "shack": {"cost": 75, "dur_s": 180, "requires": {"chai_level": 10}},
+      "dhaba": {"cost": 450, "dur_s": 300, "requires": {"built": "lassi", "tables": 3}},
+      "renovation": {"dur_s": 1200},
+      "move": {"dur_s": 1800}
+    },
+    "stages": [
+      {"id": "cart", "tables_max": 2, "gallas_max": 1, "waiters_max": 1, "waiter_names": ["Chhotu"],
+       "_cart_comment": "9 Nov (owner: a chai stall has no server and cashier): the cart's waiter is Chhotu (his own model) and the bill is paid at the cart's cash table with no cashier (Layout3.is_cart_galla)."},
+      {"id": "shack", "tables_max": 3, "gallas_max": 2, "waiters_max": 2},
+      {"id": "dhaba"}
+    ]
+  },
+  "galla": {
+    "_comment": "ref: 5.0 s base (12.0/min), /1.02 per level, upgrade cost x1.2 per level from 4 (galla 1) / 10 (galla 2), hire galla 2 = 50, max 2. restart_delay ref 0.15 s after each sale.",
+    "service_base": 5.0,
+    "service_div": 1.02,
+    "max": 2,
+    "max_level": 100,
+    "upgrade_cost_base": [
+      4.0,
+      10.0
+    ],
+    "upgrade_cost_growth": 1.2,
+    "hire_costs": [
+      50.0
+    ],
+    "restart_delay": 0.15,
+    "staff": [
+      "Munna",
+      "Bablu"
+    ]
+  },
+  "waiters": {
+    "_comment": "design (user change request 2026-10-19; WHOLE ORDER 2026-10-20): waiters carry a seated traveller's WHOLE order (one item per built station: chai, + roti once the tandoor is built) in one trip: Sim hands a free waiter the order once he would wait at most order_early_s in total at its passes (he plans the cheapest order of passes and sets off while the last item is still cooking; in the tutorial only when every item is on its pass), he stacks the items side by side on the tray, walks to the table once and the items hop onto it serve_stagger_s apart. Per-waiter levels like the galla: speed x speed_step per level, upgrade cost upgrade_cost_base x upgrade_cost_growth^(lvl-1), hire costs per extra waiter. base_speed_ratio = walk speed relative to a traveller (1.65 since the whole-order retune: the loop chai pass -> tandoor pass -> table is ~2 s longer than a one-item trip; was 1.4). trip_est_s is only an estimate (pass -> seat -> pass at level 1, one item) for the panel rate, offline income and the AVG FOOD WAIT fallback; each further item in an order adds order_extra_item_share of a trip (also the ramp's default until it has measured real trips); the Sim walks real paths.",
+    "names": [
+      "Raju",
+      "Shambhu",
+      "Lakhan",
+      "Gopal"
+    ],
+    "start": 1,
+    "max": 3,
+    "max_level": 100,
+    "hire_costs": [
+      40.0,
+      120.0
+    ],
+    "hire_cost_growth": 3.0,
+    "upgrade_cost_base": 6.0,
+    "upgrade_cost_growth": 1.2,
+    "speed_step": 1.05,
+    "base_speed_ratio": 1.65,
+    "trip_est_s": 4.5,
+    "title": "WAITERS",
+    "info": "They carry every order from the kitchen to the tables. More waiters, less waiting.",
+    "order_early_s": 1.0,
+    "serve_stagger_s": 0.12,
+    "order_extra_item_share": 0.35,
+    "max_family": 4,
+    "tray_levels": [
+      15,
+      30
+    ],
+    "tray_batch_est": 0.4
+  },
+  "seating": {
+    "_comment": "design (user change request 2026-10-19): a table set = 1 dining_table + 2 charpais = 4 seats. Start 2 sets (8 seats), max 5 sets (20 seats) at this stage. New sets cost table_costs in order, then x table_cost_growth. eat_s = munch time after the waiter serves. A traveller waits in the door line (max door_line_max) and gives up after give_up_s (LOST). sit_overhead_s only feeds the seat-turnover estimate.",
+    "tables_start": 2,
+    "tables_max": 5,
+    "seats_per_table": 4,
+    "table_costs": [
+      30.0,
+      75.0,
+      180.0
+    ],
+    "table_cost_growth": 2.4,
+    "eat_s": 3.0,
+    "give_up_s": 0.0,
+    "door_line_max": 4,
+    "sit_overhead_s": 1.5,
+    "title": "CHARPAI SEATING",
+    "info": "More tables, more travellers. When every seat is taken, travellers wait at the gate and passing lorries drive on.",
+    "tables_max_family": 8,
+    "tables_start_family": 3,
+    "family_seat_models": [
+      "trav_family_m",
+      "trav_family_f",
+      "trav_baraati_m",
+      "trav_baraati_f"
+    ]
+  },
+  "traffic": {
+    "_comment": "ref: ~18 travellers/min with 2 gallas, avg galla line 1.5-2, parking 67-75%. Walk times ref (lay-by to chai 8.2 s, chai to galla 2.8 s). design (2026-10-19): travellers come off vehicles parked in the TRUCK PARKING bays across the highway (parking_slots = bays, 4 at this stage); each vehicle waits for its own riders. vehicle_mix = relative odds per model id, riders = [min, max] travellers per vehicle (drivers/cleaners; bus 3-6). With ~2.9 riders and ~45 s total stay (vehicle_dwell_est_s, used only for the parking estimate), 4 bays give ~15-18 travellers/min. vehicle_dwell_s is the MINIMUM parked time; the vehicle also waits for all its riders. group_size is the legacy fallback.",
+    "travellers_per_min": 18.0,
+    "group_size": [
+      1,
+      3
+    ],
+    "parking_slots": 4,
+    "vehicle_mix": {
+      "truck": 0.33,
+      "truck_green": 0.24,
+      "bus": 0.0,
+      "auto": 0.12,
+      "car": 0.16
+    },
+    "riders": {
+      "truck": [
+        2,
+        3
+      ],
+      "truck_green": [
+        2,
+        3
+      ],
+      "bus": [
+        3,
+        6
+      ],
+      "auto": [
+        1,
+        3
+      ],
+      "car": [
+        2,
+        4
+      ]
+    },
+    "_bus_comment": "design 2026-10-20 'Buses drop & go': buses never use the bays (vehicle_mix bus = 0). A bus stops at the BUS STOP (east end of the truck lot, by the lay-by), drops bus_riders_min..max travellers and picks up everyone waiting in the shelter's line (one every bus_board_s s); while it stands there the next bus may already wait behind it. How often comes from the ARRIVAL ACCOUNT below (a busload = mean riders x 1 +- bus_interval_jitter; while a bus stands at the stop and every bay is taken the next may queue with bus_riders_min owed and tops up to a full load when it opens its door). If the first in line has waited bus_max_wait_s and no bus is coming, one is sent at once (it brings riders only if the account holds a busload, or ramp_pickup_phase of one while every bay is taken; else it comes empty). On the tutorial's reference pacing: a bus every tutorial_bus_interval_s (x 1 +- jitter), the first bus_first_delay_s after arrivals open. Manners (QA round 1, 2026-10-20): the bus pulls away only once every rider it dropped has crossed the road, and once nobody is on the crossing ahead of it within its lane band (it waits up to bus_xing_wait_s for that, then gives way at the zebra line instead), after bus_polite_s. It holds the door up to bus_late_hold_s for EACH returning rider walking within bus_late_radius_m of the stop (bus_late_total_s a stop) takes new passengers for bus_accept_s after its door opens (those already expected still board) and adds no courtesy waits (late riders, the crossing ahead) once the door has been open bus_courtesy_s. It never holds the crossing from the stop; nobody ever stops on the road (a bus that holds the crossing keeps people at the kerbs).",
+    "bus_interval_jitter": 0.25,
+    "bus_polite_s": 0.6,
+    "bus_late_radius_m": 3.0,
+    "bus_late_hold_s": 2.0,
+    "bus_late_total_s": 5.0,
+    "bus_xing_wait_s": 2.5,
+    "bus_accept_s": 10.0,
+    "bus_courtesy_s": 15.0,
+    "_ramp_comment": "design 2026-10-20 ARRIVAL RAMP (user: buses rarely right after the tutorial, more often as waiters / tables are added), retuned 2026-10-20 for WHOLE-ORDER waiters (one trip per traveller, kulhad + roti together). Sim.capacity_estimate(): travellers/min the dhaba can serve now = min of waiters (waiters x 60 / the MEASURED whole-order trip: taking the order -> last item on the table, waits at a pass left out, per order key 'chai' / 'chai+tandoor'; until measured ramp_waiter_trip_s per one-item order x (1 + waiters.order_extra_item_share per further item)), seats (seats x 60 / (ramp_seat_overhead_s + typical food wait + eat_s), typical food wait = slowest cook + ramp_food_trip_k x that trip), stations (slowest station, employees x 60 / processing, counted at ramp_station_k of it: a fixed brew time queues up fast at full rate) and gallas (sum of 60 / (bill + restart delay)). Target arrivals/min = clamp(ramp_capacity_k x that, ramp_min_tpm, ramp_max_tpm) x backlog damping; damping = ramp_backlog_s / (seconds the waiters need for the orders still owed to seated, sitting-down and door-line travellers; an order already being fetched counts half), between ramp_backlog_min and 1, smoothed over ramp_backlog_tau_s - only a backlog takes arrivals below the floor. The target eases up with time constant ramp_ease_s (no bursts) and down with ramp_ease_down_s. ARRIVAL ACCOUNT: owed travellers grow at the target; a lorry / tempo / car is called for a free bay once the account (less riders already called) holds a vehicle's mean riders, a bus once it holds a busload; the bays take what they can, the buses bring the rest; capped at 2 busloads beyond what is already called (no catch-up bursts). Measured (headless, 2026-10-20): right after the tutorial (1 waiter at waiters.base_speed_ratio 1.65, 2 tables, 2 gallas, tandoor: a ~5.5-6 s whole-order loop) the ramp runs ~10-11/min and arrivals average ~9-11/min over the first 150 s; 3 waiters / 5 tables / 2 gallas (chai only) run at the ramp_max_tpm cap, ~16-17.5/min arriving over 600 s. TUTORIAL: the reference pacing (travellers_per_min, a bus every tutorial_bus_interval_s) its beats are timed to - the KAAM claim that opens the ad chain waits for poured cups - until the travellers that claim needs are on their way (+ ramp_tutorial_margin; free phase) or the Director reaches ramp_tutorial_from (default ad_deal); from then on the ramp, planning for the tandoor the outro builds. ramp_enabled false = the old fixed travellers_per_min everywhere.",
+    "ramp_enabled": true,
+    "ramp_tutorial_from": "ad_deal",
+    "ramp_tutorial_margin": 2.0,
+    "tutorial_bus_interval_s": 24.0,
+    "ramp_capacity_k": 1.0,
+    "ramp_station_k": 0.9,
+    "ramp_min_tpm": 5.0,
+    "ramp_max_tpm": 19.5,
+    "ramp_ease_s": 10.0,
+    "ramp_ease_down_s": 4.0,
+    "ramp_backlog_s": 25.0,
+    "ramp_backlog_min": 0.5,
+    "ramp_backlog_tau_s": 8.0,
+    "ramp_waiter_trip_s": 4.5,
+    "ramp_food_trip_k": 0.6,
+    "ramp_seat_overhead_s": 1.5,
+    "ramp_pickup_phase": 0.5,
+    "bus_riders_min": 3,
+    "bus_riders_max": 6,
+    "bus_max_wait_s": 25.0,
+    "bus_first_delay_s": 5.0,
+    "bus_board_s": 0.25,
+    "vehicle_dwell_s": 22.0,
+    "vehicle_dwell_est_s": 45.0,
+    "walk_spawn_to_station_s": 8.2,
+    "walk_station_to_station_s": 2.5,
+    "walk_station_to_galla_s": 2.8,
+    "max_station_queue": 5,
+    "tutorial_inject": 5,
+    "_follow_comment": "design 2026-11-05 (owner): after the tutorial the road follows the dhaba. With follow_dhaba the arrival target is follow_k x the slowest serving stage, with no road cap (ramp_max_tpm and the signboard no longer cap it; the tutorial and its reference pacing are unchanged), a bus may bring up to bus_load_extra_max more than bus_riders_max, and travellers linger after eating (linger: min_s..max_s seated idles) while the door line is empty, a seat stays free for every traveller on the way and fewer than full x the seats are in use; they stand up the moment a seat is wanted. Target: about 80 % of the seats in use.",
+    "follow_dhaba": true,
+    "follow_k": 1.0,
+    "bus_load_extra_max": 12,
+    "linger": {
+      "min_s": 30.0,
+      "max_s": 60.0,
+      "full": 0.8
+    }
+  },
+  "tasks": {
+    "_comment": "ref: 3 slots; claims fill ~10% of the chest track each (6 segments drawn); 'Attend 20' paid 48 and 'Generate 100' paid 53; earned tasks count sales AND rewards (W4-FIX-core: so texts.earned reads 'for the dhaba', not 'at the galla'). Other rewards are design. Texts are original dhaba wording; {n} = target, {money} = Rs amount, {station} = station noun, {g} = galla number, {staff} = galla cashier. ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): only the first four cards keep fixed rewards (chai_l25, chai_serve20, chai_l50, earn_100); every other card has reward 0 = sized when it is handed out (generators.reward_minutes x the reward rate), or by its own reward_minutes (build_kadai, chai_l100: 1 min). The chest pays chest_reward.cash_minutes (1.5) of the reward rate. ROUND 2 STEP 2 (0.3.4, owner decisions 4 and 5): texts use only the three verbs, HIRE (a new person), UPGRADE (someone or something you have) and BUILD (a new counter or table); waiter cards point at STAFF; build cards read 'Build the <counter>'.",
+    "slots": 3,
+    "chest_claims": 10,
+    "chest_segments": 6,
+    "chest_reward": {
+      "sikke": 10,
+      "cash_minutes": 1.5
+    },
+    "texts": {
+      "level": "Upgrade the {station} to level {n}",
+      "served": "Serve {n} travellers at the {station}",
+      "earned": "Collect {money} for the dhaba",
+      "billed": "Bill {n} travellers at the cash counter",
+      "galla_level": "Upgrade Cashier {g} to level {n}",
+      "hire": "Hire cook {n} at the {station}",
+      "processing": "Upgrade the {station} SPEED {n} times",
+      "build": "Build the {station}",
+      "seated": "Seat {n} travellers",
+      "tables": "Build table {n}",
+      "waiters": "Hire waiter {n}",
+      "waiter_level": "Upgrade Waiter {w} to level {n}",
+      "served_dish": "Serve {n} x {dish}"
+    },
+    "_tasks_comment": "A def may carry its own 'text' (overrides the kind template). Kinds tables / waiters / waiter_level are absolute (read from the game state); seated counts task_event('seated') from the Sim.",
+    "start": [
+      "chai_l25",
+      "chai_serve20",
+      "chai_l50"
+    ],
+    "sequence": [
+      "earn_100",
+      "build_tandoor",
+      "waiter_hire2",
+      "add_table",
+      "galla1_l5",
+      "build_lassi",
+      "tandoor_l25",
+      "lassi_l25",
+      "tandoor_serve20",
+      "tandoor_l50",
+      "lassi_serve30",
+      "seat_50",
+      "waiter1_l5",
+      "waiter_hire3",
+      "build_kadai",
+      "kadai_l25",
+      "tandoor_naan20",
+      "kadai_l50",
+      "chai_proc3",
+      "lassi_chaas20",
+      "galla2_l5",
+      "lassi_l50",
+      "kadai_serve30",
+      "billed_60",
+      "chai_coffee20",
+      "kadai_dal20",
+      "chai_hire2",
+      "tables_5",
+      "chai_l100",
+      "tandoor_hire2",
+      "tandoor_keema20",
+      "lassi_hire2",
+      "lassi_mango20",
+      "chai_green_tea20",
+      "kadai_paneer20",
+      "kadai_hire2"
+    ],
+    "defs": {
+      "chai_l25": {
+        "kind": "level",
+        "station": "chai",
+        "target": 25,
+        "reward": 70.0
+      },
+      "chai_serve20": {
+        "kind": "served",
+        "station": "chai",
+        "target": 20,
+        "reward": 48.0
+      },
+      "chai_l50": {
+        "kind": "level",
+        "station": "chai",
+        "target": 50,
+        "reward": 150.0
+      },
+      "earn_100": {
+        "kind": "earned",
+        "target": 100.0,
+        "reward": 53.0
+      },
+      "build_tandoor": {
+        "kind": "build",
+        "station": "tandoor",
+        "target": 1,
+        "reward": 0.0
+      },
+      "galla1_l5": {
+        "kind": "galla_level",
+        "galla": 0,
+        "target": 5,
+        "reward": 0.0
+      },
+      "tandoor_serve20": {
+        "kind": "served",
+        "station": "tandoor",
+        "target": 20,
+        "reward": 0.0
+      },
+      "tandoor_l10": {
+        "kind": "level",
+        "station": "tandoor",
+        "target": 10,
+        "reward": 0.0
+      },
+      "chai_proc3": {
+        "kind": "processing",
+        "station": "chai",
+        "target": 3,
+        "reward": 0.0
+      },
+      "galla2_l5": {
+        "kind": "galla_level",
+        "galla": 1,
+        "target": 5,
+        "reward": 0.0
+      },
+      "billed_60": {
+        "kind": "billed",
+        "target": 60,
+        "reward": 0.0
+      },
+      "chai_hire2": {
+        "kind": "hire",
+        "station": "chai",
+        "target": 2,
+        "reward": 0.0
+      },
+      "tandoor_l25": {
+        "kind": "level",
+        "station": "tandoor",
+        "target": 25,
+        "reward": 0.0
+      },
+      "tandoor_hire2": {
+        "kind": "hire",
+        "station": "tandoor",
+        "target": 2,
+        "reward": 0.0
+      },
+      "chai_l100": {
+        "kind": "level",
+        "station": "chai",
+        "target": 100,
+        "reward": 0.0,
+        "reward_minutes": 1.0
+      },
+      "add_table": {
+        "kind": "tables",
+        "target": 3,
+        "reward": 0.0,
+        "text": "Build table {n}"
+      },
+      "waiter_hire2": {
+        "kind": "waiters",
+        "target": 2,
+        "reward": 0.0,
+        "text": "Hire waiter {n} (tap STAFF)"
+      },
+      "seat_50": {
+        "kind": "seated",
+        "target": 50,
+        "reward": 0.0
+      },
+      "waiter1_l5": {
+        "kind": "waiter_level",
+        "waiter": 0,
+        "target": 5,
+        "reward": 0.0
+      },
+      "tables_5": {
+        "kind": "tables",
+        "target": 5,
+        "reward": 0.0,
+        "text": "Build table {n}"
+      },
+      "build_lassi": {
+        "kind": "build",
+        "station": "lassi",
+        "target": 1,
+        "reward": 0.0,
+        "text": "Build the lassi counter (needs 2 waiters)"
+      },
+      "lassi_serve30": {
+        "kind": "served",
+        "station": "lassi",
+        "target": 30,
+        "reward": 0.0
+      },
+      "lassi_l25": {
+        "kind": "level",
+        "station": "lassi",
+        "target": 25,
+        "reward": 0.0
+      },
+      "waiter_hire3": {
+        "kind": "waiters",
+        "target": 3,
+        "reward": 0.0,
+        "text": "Hire waiter {n} (tap STAFF)"
+      },
+      "lassi_hire2": {
+        "kind": "hire",
+        "station": "lassi",
+        "target": 2,
+        "reward": 0.0
+      },
+      "build_kadai": {
+        "kind": "build",
+        "station": "kadai",
+        "target": 1,
+        "reward": 0.0,
+        "reward_minutes": 1.0
+      },
+      "kadai_serve30": {
+        "kind": "served",
+        "station": "kadai",
+        "target": 30,
+        "reward": 0.0
+      },
+      "kadai_l25": {
+        "kind": "level",
+        "station": "kadai",
+        "target": 25,
+        "reward": 0.0
+      },
+      "kadai_hire2": {
+        "kind": "hire",
+        "station": "kadai",
+        "target": 2,
+        "reward": 0.0
+      },
+      "tandoor_l50": {
+        "kind": "level",
+        "station": "tandoor",
+        "target": 50,
+        "reward": 0.0
+      },
+      "lassi_l50": {
+        "kind": "level",
+        "station": "lassi",
+        "target": 50,
+        "reward": 0.0
+      },
+      "kadai_l50": {
+        "kind": "level",
+        "station": "kadai",
+        "target": 50,
+        "reward": 0.0
+      },
+      "tandoor_naan20": {
+        "kind": "served_dish",
+        "station": "tandoor",
+        "dish": "naan",
+        "target": 20,
+        "reward": 0.0
+      },
+      "chai_coffee20": {
+        "kind": "served_dish",
+        "station": "chai",
+        "dish": "coffee",
+        "target": 20,
+        "reward": 0.0
+      },
+      "lassi_chaas20": {
+        "kind": "served_dish",
+        "station": "lassi",
+        "dish": "chaas",
+        "target": 20,
+        "reward": 0.0
+      },
+      "kadai_dal20": {
+        "kind": "served_dish",
+        "station": "kadai",
+        "dish": "dal",
+        "target": 20,
+        "reward": 0.0
+      },
+      "tandoor_keema20": {
+        "kind": "served_dish",
+        "station": "tandoor",
+        "dish": "keema_paratha",
+        "target": 20,
+        "reward": 0.0
+      },
+      "lassi_mango20": {
+        "kind": "served_dish",
+        "station": "lassi",
+        "dish": "mango_lassi",
+        "target": 20,
+        "reward": 0.0
+      },
+      "chai_green_tea20": {
+        "kind": "served_dish",
+        "station": "chai",
+        "dish": "green_tea",
+        "target": 20,
+        "reward": 0.0
+      },
+      "kadai_paneer20": {
+        "kind": "served_dish",
+        "station": "kadai",
+        "dish": "paneer",
+        "target": 20,
+        "reward": 0.0
+      }
+    },
+    "generators": {
+      "_comment": "design: once the sequence runs out, slots refill from this rotation. Rewards = reward_minutes x the HUD rate at assignment (min reward_min), rounded to 2 significant figures. tables / waiters / waiter_level are skipped once maxed. ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): reward_minutes 0.25 of the reward rate (rewards.basis = the real takings without VIP), at least 20 (200 on screen); 'earned' targets are earned_target_minutes of the same rate.",
+      "rotation": [
+        "earned",
+        "served",
+        "served_dish",
+        "level",
+        "seated",
+        "galla_level",
+        "billed",
+        "waiter_level",
+        "tables",
+        "waiters"
+      ],
+      "earned_target_minutes": 3.0,
+      "served_base": 30,
+      "served_step": 10,
+      "billed_base": 50,
+      "billed_step": 25,
+      "seated_base": 40,
+      "seated_step": 15,
+      "level_step": 10,
+      "galla_level_step": 5,
+      "waiter_level_step": 5,
+      "reward_minutes": 0.25,
+      "reward_min": 20.0
+    }
+  },
+  "ad_bubble": {
+    "_comment": "ref: wall-ad bubble offers 100 in the tutorial (~1.85 min of the HUD rate), countdown ~12 s. design: after the tutorial the reward is ~2 min of the HUD rate (min 100), at most one bubble every 3 min (spec 9.11). ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): 1 min of the reward rate (rewards.basis) every 4 min (interval_s), at least 50 (500 on screen), 10 per session; no bubble in the first first_delay_s (120 s) after the game opens or comes back (Game._ad_wait_after_return).",
+    "tutorial_reward": 100.0,
+    "reward_minutes": 1.0,
+    "reward_min": 50.0,
+    "lifetime_s": 12.0,
+    "first_delay_s": 120.0,
+    "interval_s": 240.0,
+    "max_per_session": 10,
+    "hide_when_not_ready": true,
+    "retry_s": 15.0
+  },
+  "offline": {
+    "_comment": "spec 9.9 / GDD: pay while away = rate x the realistic income rate (throughput-limited, VIP included), capped at cap_hours. ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): nothing is paid and no popup shows under min_away_s (10 min) away; 1/4 rate (was 1/2); the rewarded-ad x2 (ad_mult) is offered only from ad_min_away_s (30 min) away (Game.offline_ad_allowed()), so 2 h away pays at most 30 min of takings, or 60 with the ad.",
+    "cap_hours": 2.0,
+    "rate": 0.25,
+    "min_away_s": 600.0,
+    "ad_mult": 2.0,
+    "ad_min_away_s": 1800.0
+  },
+  "hisaab": {
+    "_comment": "Colour thresholds for the HISAAB rows (spec 3.13), matched to the reference stats screen (88 s): a 5 s average galla wait reads RED, 72% parking and a line of 2 read BLUE (a value >= warn turns orange, >= bad red). design 2026-10-19: AVG FOOD WAIT (seat -> served, s), LOST (tone from travellers lost in the last minute), SEATS FULL (share 0..1 of the last minute with every seat busy).",
+    "parking_warn": 0.8,
+    "parking_bad": 0.95,
+    "line_warn": 3.0,
+    "line_bad": 5.0,
+    "wait_warn": 3.0,
+    "wait_bad": 4.5,
+    "food_wait_warn": 8.0,
+    "food_wait_bad": 15.0,
+    "lost_warn": 1,
+    "lost_bad": 3,
+    "seats_full_warn": 0.25,
+    "seats_full_bad": 0.5
+  },
+  "menus": {
+    "_comment": "design 2026-10-21 STATION MENUS (docs/v3-station-menus.md §1-2): every station's 'menu' lists its dishes cheapest first; dish k unlocks at its from_level (the station's milestone levels, so the milestone's price step (x1.3 since round 2) and the new dish arrive together). A ticket's dish is rolled from the UNLOCKED dishes when the traveller sits down (Sim.order_rng): the newest dish gets weight_newest, the older ones share the rest equally. price_mult / cook_mult are RAW relative factors: the game divides each by the unlocked mix's weighted mean, so the mean price and mean brew time of a station are EXACTLY its price and processing time in every unlock state (the HUD, the ramp and tools/sim/pacing_v3.py see no change; the tool's MENU CHECK asserts it). Nothing unlocks before the tutorial is done. card_name (dish 1 only, optional) = the product card's flavour name (the tutorial's chai sheet keeps reading DIESEL CHAI); item = the glb for the pass / tray / table; prop = the glb that appears on the station when the dish unlocks (Layout3.UNLOCK_PROP_POINTS); serve_text = the KAAM served_dish card.",
+    "weight_newest": 0.4,
+    "showcase_tickets": 8,
+    "fan_share": 0.1,
+    "pop_life_s": 4.0
+  },
+  "daynight": {
+    "_comment": "design 2026-10-21 DAY / NIGHT (owner): one cycle = cycle_s GAME seconds (Refs.clock: --speed scales it), phase 0..1 with 0 = dawn: dawn -> bright day (0.10-0.48, the longest stretch) -> golden -> orange dusk (0.62) -> twilight -> night (0.72-0.96, ~3 min with the fades) -> dawn. scripts/v3/world/day_night.gd interpolates the keys (smoothstep, wrapping) into the sun (colour, energy, pitch / yaw in degrees), the ambient colour / energy, the background colour and the shadow opacity; 'night' 0..1 drives the cheap night extras (fairy-light boost, fire-mouth / lamp glows, vehicle head- and tail-lights, the night vehicle mix). The 'day' keys are EXACTLY main3's daylight constants. day_phase = the bright-day phase the cycle is frozen at until the tutorial is done, and where new and old saves start (saved as day_phase). shots = phases for --capture=daynight. No real-time lights, no price changes.",
+    "enabled": true,
+    "cycle_s": 600.0,
+    "day_phase": 0.25,
+    "keys": [
+      {
+        "t": 0.0,
+        "name": "dawn",
+        "sun": [
+          1.0,
+          0.7,
+          0.52
+        ],
+        "sun_energy": 0.4,
+        "sun_pitch": -30.0,
+        "sun_yaw": -115.0,
+        "amb": [
+          0.82,
+          0.76,
+          0.92
+        ],
+        "amb_energy": 0.38,
+        "bg": [
+          0.62,
+          0.55,
+          0.62
+        ],
+        "shadow": 0.35,
+        "night": 0.3
+      },
+      {
+        "t": 0.05,
+        "name": "sunrise",
+        "sun": [
+          1.0,
+          0.86,
+          0.7
+        ],
+        "sun_energy": 0.46,
+        "sun_pitch": -40.0,
+        "sun_yaw": -95.0,
+        "amb": [
+          0.95,
+          0.9,
+          0.9
+        ],
+        "amb_energy": 0.35,
+        "bg": [
+          0.62,
+          0.68,
+          0.55
+        ],
+        "shadow": 0.42,
+        "night": 0.04
+      },
+      {
+        "t": 0.1,
+        "name": "day",
+        "sun": [
+          1.0,
+          0.95,
+          0.86
+        ],
+        "sun_energy": 0.42,
+        "sun_pitch": -50.0,
+        "sun_yaw": -45.0,
+        "amb": [
+          0.96,
+          0.96,
+          0.94
+        ],
+        "amb_energy": 0.4,
+        "bg": [
+          0.6,
+          0.74,
+          0.5
+        ],
+        "shadow": 0.5,
+        "night": 0.0
+      },
+      {
+        "t": 0.48,
+        "name": "day_end",
+        "sun": [
+          1.0,
+          0.95,
+          0.86
+        ],
+        "sun_energy": 0.42,
+        "sun_pitch": -50.0,
+        "sun_yaw": -45.0,
+        "amb": [
+          0.96,
+          0.96,
+          0.94
+        ],
+        "amb_energy": 0.4,
+        "bg": [
+          0.6,
+          0.74,
+          0.5
+        ],
+        "shadow": 0.5,
+        "night": 0.0
+      },
+      {
+        "t": 0.56,
+        "name": "golden",
+        "sun": [
+          1.0,
+          0.82,
+          0.58
+        ],
+        "sun_energy": 0.52,
+        "sun_pitch": -38.0,
+        "sun_yaw": -48.0,
+        "amb": [
+          1.0,
+          0.9,
+          0.8
+        ],
+        "amb_energy": 0.33,
+        "bg": [
+          0.66,
+          0.66,
+          0.46
+        ],
+        "shadow": 0.5,
+        "night": 0.0
+      },
+      {
+        "t": 0.62,
+        "name": "dusk",
+        "sun": [
+          1.0,
+          0.55,
+          0.3
+        ],
+        "sun_energy": 0.5,
+        "sun_pitch": -26.0,
+        "sun_yaw": -32.0,
+        "amb": [
+          0.95,
+          0.7,
+          0.62
+        ],
+        "amb_energy": 0.34,
+        "bg": [
+          0.72,
+          0.48,
+          0.38
+        ],
+        "shadow": 0.42,
+        "night": 0.35
+      },
+      {
+        "t": 0.68,
+        "name": "twilight",
+        "sun": [
+          0.62,
+          0.5,
+          0.85
+        ],
+        "sun_energy": 0.26,
+        "sun_pitch": -42.0,
+        "sun_yaw": -25.0,
+        "amb": [
+          0.42,
+          0.4,
+          0.62
+        ],
+        "amb_energy": 0.42,
+        "bg": [
+          0.2,
+          0.2,
+          0.32
+        ],
+        "shadow": 0.3,
+        "night": 0.8
+      },
+      {
+        "t": 0.72,
+        "name": "night",
+        "sun": [
+          0.55,
+          0.6,
+          0.8
+        ],
+        "sun_energy": 0.25,
+        "sun_pitch": -55.0,
+        "sun_yaw": -40.0,
+        "amb": [
+          0.3,
+          0.32,
+          0.5
+        ],
+        "amb_energy": 0.3,
+        "bg": [
+          0.07,
+          0.08,
+          0.16
+        ],
+        "shadow": 0.42,
+        "night": 1.0
+      },
+      {
+        "t": 0.96,
+        "name": "night_end",
+        "sun": [
+          0.55,
+          0.6,
+          0.8
+        ],
+        "sun_energy": 0.25,
+        "sun_pitch": -55.0,
+        "sun_yaw": -40.0,
+        "amb": [
+          0.3,
+          0.32,
+          0.5
+        ],
+        "amb_energy": 0.3,
+        "bg": [
+          0.07,
+          0.08,
+          0.16
+        ],
+        "shadow": 0.42,
+        "night": 1.0
+      }
+    ],
+    "shots": {
+      "dawn": 0.015,
+      "day": 0.3,
+      "dusk": 0.625,
+      "night": 0.84
+    },
+    "lights": {
+      "_comment": "fairy_boost / fairy_low = FairyLights shader boost and twinkle floor at day / full night. glows = fixed NightGlow quads (unshaded additive, one mesh): kind pool (flat radial on the ground, r = radius m), bulb (camera-facing, steady) or fire (flickers); colour is added light (keep it dim). The fire mouths of the chai bhatti, tandoor and kadai are in DayNight.STATION_FIRES (prop space).",
+      "fairy_boost_day": 0.8,
+      "fairy_boost_night": 4.5,
+      "fairy_low_day": 0.9,
+      "fairy_low_night": 0.8,
+      "glow_gain": 1.0,
+      "headlight_beam_m": 4.5,
+      "glows": [
+        {
+          "p": [
+            3.8,
+            0.06,
+            10.7
+          ],
+          "kind": "pool",
+          "r": 3.64,
+          "color": [
+            1.08,
+            0.675,
+            0.216
+          ]
+        },
+        {
+          "p": [
+            3.8,
+            2.72,
+            10.25
+          ],
+          "kind": "bulb",
+          "r": 1.6,
+          "color": [
+            0.45,
+            0.28,
+            0.08
+          ]
+        },
+        {
+          "p": [
+            4.5,
+            3.9,
+            -0.25
+          ],
+          "kind": "bulb",
+          "r": 3.2,
+          "color": [
+            0.45,
+            0.26,
+            0.08
+          ]
+        },
+        {
+          "p": [
+            3.8,
+            0.06,
+            18.2
+          ],
+          "kind": "pool",
+          "r": 2.66,
+          "color": [
+            0.81,
+            0.54,
+            0.203
+          ]
+        },
+        {
+          "p": [
+            -6.35,
+            0.06,
+            19.3
+          ],
+          "kind": "pool",
+          "r": 2.52,
+          "color": [
+            0.945,
+            0.567,
+            0.189
+          ]
+        },
+        {
+          "p": [
+            14.55,
+            0.06,
+            16.9
+          ],
+          "kind": "pool",
+          "r": 3.08,
+          "color": [
+            0.54,
+            0.675,
+            0.702
+          ]
+        },
+        {
+          "p": [
+            14.55,
+            2.25,
+            16.95
+          ],
+          "kind": "bulb",
+          "r": 0.7,
+          "color": [
+            0.6,
+            0.75,
+            0.75
+          ]
+        },
+        {
+          "p": [
+            2.6,
+            0.06,
+            6.3
+          ],
+          "kind": "pool",
+          "r": 2.8,
+          "color": [
+            0.608,
+            0.378,
+            0.121
+          ]
+        },
+        {
+          "p": [
+            5.8,
+            0.06,
+            5.0
+          ],
+          "kind": "pool",
+          "r": 3.36,
+          "color": [
+            0.54,
+            0.338,
+            0.108
+          ]
+        },
+        {
+          "p": [
+            10.4,
+            0.06,
+            5.0
+          ],
+          "kind": "pool",
+          "r": 3.36,
+          "color": [
+            0.54,
+            0.338,
+            0.108
+          ]
+        },
+        {
+          "p": [
+            13.6,
+            0.06,
+            3.0
+          ],
+          "kind": "pool",
+          "r": 2.8,
+          "color": [
+            0.54,
+            0.338,
+            0.108
+          ]
+        },
+        {
+          "p": [
+            1.6,
+            0.06,
+            2.2
+          ],
+          "kind": "pool",
+          "r": 2.2,
+          "color": [
+            0.95,
+            0.55,
+            0.18
+          ]
+        }
+      ]
+    },
+    "night_mix": {
+      "_comment": "Night vehicle mix (blended in by 'night'): park_mix replaces traffic.vehicle_mix for the bays, through_mult multiplies the through-traffic odds per kind, bus_riders_min / max replace traffic.bus_riders_min / max (fuller, so fewer, stop buses). The ARRIVAL ACCOUNT is unchanged, so travellers / min stay the same; at night 0 every value is the day one exactly.",
+      "park_mix": {
+        "truck": 0.46,
+        "truck_green": 0.38,
+        "auto": 0.05,
+        "car": 0.08
+      },
+      "through_mult": {
+        "truck": 2.4,
+        "bus": 0.25,
+        "auto": 0.5,
+        "car": 0.6,
+        "bike": 0.4,
+        "tractor": 0.2
+      },
+      "bus_riders_min": 5,
+      "bus_riders_max": 6
+    }
+  },
+  "camera": {
+    "_comment": "design 2026-10-21 PINCH ZOOM (owner): the player zooms the orthographic camera between zoom_min (close: a station fills about half the screen) and zoom_max (far: the whole dhaba and the truck parking) as multiples of the game size (CameraRig GAME 1.0 = s_game); pinch (two fingers), mouse wheel (wheel_step per notch) and the trackpad magnify gesture, anchored on the pinch midpoint / cursor, smoothed over zoom_smooth_s. Scripted moves (tutorial, station sheets) keep their own sizes; panel_restore returns to the player's zoom. The zoom is not saved: each session starts at the game zoom.",
+    "zoom_min": 0.5,
+    "zoom_max": 2.6,
+    "wheel_step": 1.12,
+    "zoom_smooth_s": 0.08
+  },
+  "rewards": {
+    "_comment": "ROUND 2 (0.3.3, docs/round2/economy-proposal.md §5, owner decisions 2026-10-22): 'real' = every reward sized in minutes (wall ad, chest, generated KAAM rewards and 'earned' targets, a card's reward_minutes) reads Game.reward_rate_per_min() = the HUD takings /min WITHOUT VIP (VIP doubles sales once, never the rewards on top). 'capacity' = 0.3.2 (the station capacity rate).",
+    "basis": "real"
+  },
+  "difficulty": {
+    "_comment": "Owner decision 3 (2026-10-22): ONE cost dial on every cost after the tutorial. cost_mult 1.0 = the approved round-2 economy (already +25 % over the same-pace set; 0.8 would reproduce 0.3.2's unlock pace); 1.1 = every cost below x1.1. Scaled: station Level Up costs (chai only from exempt_levels_below, L25), cook hires, speed upgrades (not exempt_speed: chai's, the tutorial buys it), builds (not exempt_builds: the tandoor), waiter hires after the first exempt_waiter_hires (the 2nd waiter), waiter upgrades and tables after the first exempt_tables (table 3). Never scaled: the cashiers (galla hire and upgrades, all bought in the tutorial), prices, arrivals and rewards. Read by game.gd (difficulty_cost_mult) and tools/sim/pacing_v3.py.",
+    "cost_mult": 1.0,
+    "exempt_levels_below": {
+      "chai": 25
+    },
+    "exempt_speed": [
+      "chai"
+    ],
+    "exempt_builds": [
+      "tandoor"
+    ],
+    "exempt_waiter_hires": 1,
+    "exempt_tables": 1
+  },
+  "signboard": {
+    "_comment": "C5.3 highway signboard: +tpm_per_level travellers/min on the arrival cap per level (Sim ramp 19.5 + 1.5 L; Game's HUD estimate 18 + 1.5 L). Opens with the kadai. Cost cost_base x cost_growth^level x the difficulty dial. 4 levels roadside, 6 after the Family Dhaba; resets on a move. The NEXT chip, banner and caption offer it only while the road is the limit and its payback (cost / gain per min) is at most max(offer_payback_min, the best LEVEL UP payback).",
+    "requires": "kadai",
+    "cost_base": 250.0,
+    "cost_growth": 1.6,
+    "max_levels": 4,
+    "max_levels_family": 6,
+    "tpm_per_level": 1.5,
+    "offer_payback_min": 10.0,
+    "reset_on_move": true,
+    "_rush_comment": "design 2026-11-05 (owner): with traffic.follow_dhaba the signboard no longer raises the road; it makes the lunch and dinner rushes bigger: during each rush_windows [from, to) of the day phase the arrival target is x (1 + rush_per_level x level). No signboard, no rush.",
+    "rush_per_level": 0.25,
+    "rush_windows": [
+      [
+        0.3,
+        0.4
+      ],
+      [
+        0.62,
+        0.72
+      ]
+    ]
+  },
+  "renovation": {
+    "_comment": "C6.1 Family Dhaba: unlock when every counter is built and at L100; x2 on every price forever.",
+    "cost": 10000.0,
+    "mult": 2.0,
+    "unlock": "all_dishes"
+  },
+  "locations": {
+    "_comment": "C6.3. order = the highway ladder. A location's 'stations' block replaces each listed key of that station wholesale (menu, build_desc, serve_text). mult multiplies every price on top of the renovation mult. sign_en = the rooftop's small English line (\"\" = the layout default), sign_hi = the gate board's Hindi line (\"\" = the default).",
+    "order": [
+      "nh44",
+      "nh48"
+    ],
+    "nh44": {
+      "name": "NH 44",
+      "region": "PUNJAB ROAD",
+      "mult": 1.0,
+      "milestone": "NH 44 · DELHI 120 km",
+      "sign_en": "",
+      "sign_hi": ""
+    },
+    "nh48": {
+      "name": "NH 48",
+      "region": "RAJASTHAN",
+      "mult": 1.5,
+      "cost": 25000.0,
+      "requires": "renovated_all_dishes",
+      "rebuild": true,
+      "palette": "models/palette_nh48.png",
+      "milestone": "NH 48 · JAIPUR 80 km",
+      "sign_en": "RAJASTHANI DHABA",
+      "sign_hi": "राजस्थानी ढाबा · होटल",
+      "stations": {
+        "chai": {
+          "serve_text": "Pour {n} kulhads of masala chai",
+          "menu": [
+            {
+              "key": "masala_chai",
+              "name": "MASALA CHAI",
+              "name_hi": "मसाला चाय",
+              "card_name": "Kulhad Masala Chai",
+              "from_level": 1,
+              "price_mult": 1.0,
+              "cook_mult": 1.0,
+              "item": "pass_kulhad",
+              "prop": "",
+              "desc": "Adrak and elaichi, poured into a kulhad that smells of rain."
+            },
+            {
+              "key": "gur_chai",
+              "name": "GUR KI CHAI",
+              "name_hi": "गुड़ की चाय",
+              "from_level": 25,
+              "price_mult": 1.5,
+              "cook_mult": 1.15,
+              "item": "pass_plate",
+              "prop": "prop_coffee_kettle",
+              "desc": "Sweetened with jaggery, the way the village likes it.",
+              "serve_text": "Pour {n} glasses of gur ki chai"
+            },
+            {
+              "key": "shikanji",
+              "name": "SHIKANJI",
+              "name_hi": "शिकंजी",
+              "from_level": 50,
+              "price_mult": 2.0,
+              "cook_mult": 0.85,
+              "item": "pass_shikanji",
+              "prop": "prop_green_tea_jar",
+              "desc": "Lemon, salt and kala namak against the Rajasthan heat.",
+              "serve_text": "Stir {n} glasses of shikanji"
+            },
+            {
+              "key": "thandai",
+              "name": "KESARIYA THANDAI",
+              "name_hi": "केसरिया ठंडाई",
+              "from_level": 100,
+              "price_mult": 2.4,
+              "cook_mult": 1.2,
+              "item": "pass_kesar_doodh",
+              "prop": "prop_milk_can",
+              "desc": "Saffron, almonds and cold milk for a long drive.",
+              "serve_text": "Serve {n} glasses of thandai"
+            }
+          ]
+        },
+        "tandoor": {
+          "build_desc": "Missi rotis and baatis off the clay oven for every hungry driver.",
+          "serve_text": "Bake {n} missi rotis in the tandoor",
+          "menu": [
+            {
+              "key": "missi_roti",
+              "name": "MISSI ROTI",
+              "name_hi": "मिस्सी रोटी",
+              "card_name": "Missi Roti",
+              "from_level": 1,
+              "price_mult": 1.0,
+              "cook_mult": 1.0,
+              "item": "pass_missi_roti",
+              "prop": "",
+              "desc": "Besan and spices, slapped hot on the tandoor wall."
+            },
+            {
+              "key": "tandoori_roti",
+              "name": "TANDOORI ROTI",
+              "name_hi": "तंदूरी रोटी",
+              "from_level": 25,
+              "price_mult": 1.5,
+              "cook_mult": 1.1,
+              "item": "pass_lahsun_roti",
+              "prop": "prop_naan_basket",
+              "desc": "Charred roti with fiery lahsun chutney on the side.",
+              "serve_text": "Bake {n} tandoori rotis"
+            },
+            {
+              "key": "baati",
+              "name": "BAATI",
+              "name_hi": "बाटी",
+              "from_level": 50,
+              "price_mult": 2.0,
+              "cook_mult": 1.25,
+              "item": "pass_baati",
+              "prop": "prop_keema_pot",
+              "desc": "Wheat balls baked in the tandoor's coals, cracked open with ghee.",
+              "serve_text": "Bake {n} plates of baati"
+            },
+            {
+              "key": "laccha_paratha",
+              "name": "LACCHA PARATHA",
+              "name_hi": "लच्छा पराठा",
+              "from_level": 100,
+              "price_mult": 2.4,
+              "cook_mult": 1.2,
+              "item": "pass_keema_paratha",
+              "prop": "prop_kulcha_board",
+              "desc": "Layer upon flaky layer, crisp from the tandoor.",
+              "serve_text": "Bake {n} laccha parathas"
+            }
+          ]
+        },
+        "lassi": {
+          "build_desc": "Jodhpur's makhaniya lassi from a clay pot, with a cap of malai.",
+          "serve_text": "Make {n} glasses of makhaniya lassi",
+          "menu": [
+            {
+              "key": "makhaniya",
+              "name": "MAKHANIYA LASSI",
+              "name_hi": "मक्खनिया लस्सी",
+              "card_name": "Makhaniya Lassi",
+              "from_level": 1,
+              "price_mult": 1.0,
+              "cook_mult": 1.0,
+              "item": "pass_lassi",
+              "prop": "",
+              "desc": "Jodhpur style: thick lassi with a cap of fresh malai."
+            },
+            {
+              "key": "chaach",
+              "name": "CHAACH",
+              "name_hi": "छाछ",
+              "from_level": 25,
+              "price_mult": 1.5,
+              "cook_mult": 0.8,
+              "item": "pass_chaas",
+              "prop": "prop_chaas_jug",
+              "desc": "Thin, salty buttermilk with roasted jeera.",
+              "serve_text": "Pour {n} glasses of chaach"
+            },
+            {
+              "key": "kesar_lassi",
+              "name": "KESAR LASSI",
+              "name_hi": "केसर लस्सी",
+              "from_level": 50,
+              "price_mult": 2.0,
+              "cook_mult": 1.1,
+              "item": "pass_mango_lassi",
+              "prop": "prop_patiala_glass",
+              "desc": "Saffron-gold lassi, sweet and cold.",
+              "serve_text": "Blend {n} kesar lassis"
+            },
+            {
+              "key": "rabri",
+              "name": "RABRI",
+              "name_hi": "रबड़ी",
+              "from_level": 100,
+              "price_mult": 2.4,
+              "cook_mult": 1.25,
+              "item": "pass_rabri",
+              "prop": "prop_milk_can",
+              "desc": "Milk boiled down for hours into sweet, thick layers.",
+              "serve_text": "Serve {n} bowls of rabri"
+            }
+          ]
+        },
+        "kadai": {
+          "build_desc": "A big iron kadai for dal baati, gatte and laal maas.",
+          "serve_text": "Cook {n} plates of dal baati in the kadai",
+          "menu": [
+            {
+              "key": "dal_baati",
+              "name": "DAL BAATI CHURMA",
+              "name_hi": "दाल बाटी चूरमा",
+              "card_name": "Dal Baati Churma",
+              "from_level": 1,
+              "price_mult": 1.0,
+              "cook_mult": 1.0,
+              "item": "pass_dal_baati",
+              "prop": "",
+              "desc": "Rajasthan's pride: dal, baati and sweet churma on one plate."
+            },
+            {
+              "key": "gatte",
+              "name": "GATTE KI SABZI",
+              "name_hi": "गट्टे की सब्ज़ी",
+              "from_level": 25,
+              "price_mult": 1.5,
+              "cook_mult": 1.15,
+              "item": "pass_gatte",
+              "prop": "prop_dal_handi",
+              "desc": "Gram-flour dumplings in a tangy curd gravy.",
+              "serve_text": "Serve {n} bowls of gatte ki sabzi"
+            },
+            {
+              "key": "ker_sangri",
+              "name": "KER SANGRI",
+              "name_hi": "केर सांगरी",
+              "from_level": 50,
+              "price_mult": 2.0,
+              "cook_mult": 1.2,
+              "item": "pass_ker_sangri",
+              "prop": "prop_chole_sack",
+              "desc": "Ker berries and sangri beans, sun-dried and cooked with spice.",
+              "serve_text": "Cook {n} plates of ker sangri"
+            },
+            {
+              "key": "laal_maas",
+              "name": "LAAL MAAS",
+              "name_hi": "लाल मांस",
+              "from_level": 100,
+              "price_mult": 2.4,
+              "cook_mult": 1.1,
+              "item": "pass_laal_maas",
+              "prop": "",
+              "desc": "Fiery red mutton curry from the old royal kitchens.",
+              "serve_text": "Serve {n} bowls of laal maas"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "special": {
+    "_comment": "C6.2 Aaj ka special: one dish x mult for hours from the pick. Picked at a launch or resume, never on the day the tutorial was finished; among unlocked dishes of built counters whose share of the expected bill is within [share_min, share_max] (else the smallest share). The first showcase_tickets tickets of its counter after the announcement are that dish.",
+    "mult": 2.0,
+    "hours": 24.0,
+    "share_min": 0.03,
+    "share_max": 0.15,
+    "showcase_tickets": 8
+  },
+  "event": {
+    "baraat": {
+      "_comment": "C6.4 weekend baraat: local Saturday + Sunday (days, 0 = Sunday), once free_play_s >= min_free_play_s. A baraat bus every bus_interval_s brings min(riders, room) guests, skipped below min_room. Steps pay reward_minutes of takings (at least reward_min) on CLAIM; completed unclaimed steps are paid when the window closes. The Shaadi gate is owned forever once step gate_step (0-based) completes.",
+      "days": [
+        6,
+        0
+      ],
+      "min_free_play_s": 600,
+      "bus_interval_s": 120,
+      "riders": 6,
+      "min_room": 2,
+      "steps": [
+        10,
+        25,
+        50
+      ],
+      "reward_minutes": [
+        2.0,
+        4.0,
+        6.0
+      ],
+      "reward_min": [
+        200.0,
+        400.0,
+        600.0
+      ],
+      "gate_step": 1
+    }
+  },
+  "delegation": {
+    "munshi_claims": {
+      "_comment": "C6.5: after claims_needed claims Munshi-ji claims finished task cards delay_s after they finish (STAFF toggle, default on). The chest stays a player tap.",
+      "claims_needed": 20,
+      "delay_s": 4.0
+    }
+  },
+  "offers": {
+    "starter": {
+      "_comment": "C7.4: one-time starter pack, fixed cash (ref units), frozen when first shown, paid once the tutorial is done.",
+      "product": "starter_pack",
+      "amount": 1500.0
+    }
+  }
+}

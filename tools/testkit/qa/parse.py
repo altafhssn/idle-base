@@ -89,13 +89,21 @@ for fn in sorted(os.listdir(d)):
     if m: line += "\n    " + m[-1][:260]
     m = re.findall(r"^\[summary\][^\n]*", t, re.M)
     if m: line += "\n    " + m[-1][:260]
-    m = re.findall(r"(TAPCHECK fails=\d+|ZOOMTEST fails=\d+)", t)
+    m = re.findall(r"(TAPCHECK fails=\d+|ZOOMTEST fails=\d+|PACKCHECK fails=\d+)", t)
     if m:
         line += "\n    " + m[-1]
         if not m[-1].endswith("=0"):
             job_bad.append(m[-1])
-    elif name in ("tapcheck", "zoomtest"):
-        job_bad.append("no %s fails= line" % ("TAPCHECK" if name == "tapcheck" else "ZOOMTEST"))
+    elif name in ("tapcheck", "zoomtest", "packcheck"):
+        job_bad.append("no %s fails= line" % name.upper())
+    for pf in re.findall(r"^\[packcheck\] FAIL[^\n]*", t, re.M)[:5]:
+        line += "\n    " + pf[:220]
+    # Idle Business Kit: a model or sound the game asked for that the pack lacks.
+    miss = sorted(set(re.findall(r"^\[pack\] missing (model|sound) '([^']+)'", t, re.M)))
+    if miss:
+        line += "\n    pack missing: " + ", ".join("%s %s" % m for m in miss)[:300]
+        if any(k == "model" for k, _ in miss):
+            job_bad.append("pack missing model")
     p = len(re.findall(r"\[sdk-test\] PASS", t)); f = len(re.findall(r"\[sdk-test\] FAIL", t))
     if p or f: line += "\n    sdk-test pass=%d fail=%d" % (p, f)
     if f:

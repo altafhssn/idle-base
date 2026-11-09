@@ -166,12 +166,12 @@ var _stick: Node3D = null
 
 
 # ================================================================ statics
-## True when res://assets/models/<id>.glb exists (cached).
+## True when model <id> exists in the pack or the kit (cached).
 static func model_exists(id: String) -> bool:
 	if id == "":
 		return false
 	if not _exists.has(id):
-		_exists[id] = ResourceLoader.exists(Models.DIR + id + ".glb")
+		_exists[id] = Models.exists(id)
 	return bool(_exists[id])
 
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Measures every sound in assets/audio: length, peak, RMS, LUFS-ish loudness,
+"""Measures every sound in themes/dhaba/audio: length, peak, RMS, LUFS-ish loudness,
 clipping, clicks at the edges and, for loops, the seam.
 
 Run it with Blender (its bundled Python has numpy, and Blender's `aud` module
 decodes the .ogg music and ambience):
 
   /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
-      --python tools/audio/measure.py -- assets/audio [--json out.json] [--svg out_dir]
+      --python tools/audio/measure.py -- themes/dhaba/audio [--json out.json] [--svg out_dir]
 
 Plain Python with numpy also works for the .wav files (the .ogg rows then say
 "needs Blender").

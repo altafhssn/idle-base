@@ -852,7 +852,7 @@ j_trays() { local d="$CK/trays" k; mkdir -p "$d"
       rr "$s" "$d/old_tray$k.log" --fresh --skip-tutorial --money=1e9 --buy=waiter,tandoor,lassi --tray=$k --arrivals=24 --stats=60 --window=300 --quit-at=400 --seed=1 ) &
   done
   wait
-  put G-trays "$(ev trays "$N" "$PROJ/data/economy_v3.json" "$d"/tray2_s{1,2,3,4}.log "$d"/tray1_s{1,2,3,4}.log "$d/old_tray2.log" "$d/old_tray1.log")"; }
+  put G-trays "$(ev trays "$N" "$PROJ/themes/dhaba/economy.json" "$d"/tray2_s{1,2,3,4}.log "$d"/tray1_s{1,2,3,4}.log "$d/old_tray2.log" "$d/old_tray1.log")"; }
 j_dispatch() { local d="$CK/dispatch" s k; mkdir -p "$d"; s=$(mksub dispatch)
   local C="$Q/logs/gate_dispatch_base" stamp; stamp=$(cat "$B/snap/wave1/.done" 2>/dev/null)
   # the 0.3.7 base runs never change: cached once per wave-1 snapshot
@@ -919,7 +919,7 @@ j_strings() { local d="$CK/strings"; mkdir -p "$d"
   put G-strings "$(ev strings "$N" "$d/check_po.txt" "$(cat "$d/check_po.rc")" "$PROJ/i18n/hi.po" "$PROJ/i18n/dhaba_rush.pot")"; }
 j_pacing() { local d="$CK/pacing"; mkdir -p "$d"
   # W4-NUM (2 Nov): the gate tree's own economy (tray_batch_est 0.40, lead decision 8); REALIZED 0.92 (plan 3.3)
-  local T="$PROJ/tools/sim/pacing_v3.py" E="${PACE_ECO:-$PROJ/data/economy_v3.json}"
+  local T="$PROJ/tools/sim/pacing_v3.py" E="${PACE_ECO:-$PROJ/themes/dhaba/economy.json}"
   pr() { local n="$1"; shift; ( cd "$d" && "$PY" -I "$T" --eco "$E" "$@" > "$d/$n.txt" 2>&1; echo $? > "$d/$n.rc" ); }
   ( pr p1 --seeds 20 --minutes 60; pr p2_ads --minutes 200 --promo; pr p2_noads --minutes 200 --promo --no-ads
     pr p2_sess --minutes 200 --promo --ad-sessions 20 ) &

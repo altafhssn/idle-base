@@ -9,7 +9,7 @@ SLOT="$1"; TAG="$2"; MODE="${3:-full}"
 L="$Q/logs/$TAG"; mkdir -p "$L"
 "$Q/savecheck.sh" || exit 1
 # drop this suite's own results from an earlier run with the same TAG (other logs in $L are kept)
-rm -f "$L"/tut_en_s[0-9].log "$L"/tut_hi_s1.log "$L"/tapcheck.log "$L"/zoomtest.log "$L"/sdktest.log \
+rm -f "$L"/tut_en_s[0-9].log "$L"/tut_hi_s1.log "$L"/tapcheck.log "$L"/zoomtest.log "$L"/sdktest.log "$L"/packcheck.log \
   "$L"/tutcheck.txt "$L"/summary.txt "$L"/savecheck.txt
 SEEDS="1 2 3 4"; [ "$MODE" = quick ] && SEEDS="1 2"
 # each job gets its own slot copy so saves never collide
@@ -18,6 +18,7 @@ for s in $SEEDS; do jobs_list+=("tut_en_s$s|1200|--fresh --auto --seed=$s --wind
 [ "$MODE" = full ] && jobs_list+=("tut_hi_s1|600|--lang=hi --fresh --auto --seed=1 --quit-at=260")
 jobs_list+=("tapcheck|600|--fresh --skip-tutorial --money=1e12 --tap-check")
 jobs_list+=("zoomtest|300|--fresh --skip-tutorial --zoom-test")
+jobs_list+=("packcheck|180|--check-pack")
 [ "$MODE" = full ] && jobs_list+=("sdktest|600|--fresh --sdk-test")
 i=0
 for j in "${jobs_list[@]}"; do

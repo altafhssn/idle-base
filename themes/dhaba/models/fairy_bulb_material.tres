@@ -1,0 +1,14 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://themes/dhaba/models/fairy_bulb.gdshader" id="1_fairy"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_fairy")
+shader_parameter/low = 0.6
+shader_parameter/high = 1.0
+shader_parameter/hz_min = 1.5
+shader_parameter/hz_max = 3.0
+shader_parameter/chase_step = 0.18
+shader_parameter/chase_dim = 0.35
+shader_parameter/boost = 1.25

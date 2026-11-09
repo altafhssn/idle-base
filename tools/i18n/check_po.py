@@ -171,7 +171,7 @@ mn_miss = [t for t in mn_ids if ('', t) not in po]
 for t in mn_ids: need('munshi_notes.gd *_TEXT', t)
 
 # ---------------------------------------------------------------- 6. economy data (NH 44 and every location overlay)
-eco = json.load(open(ROOT + '/data/economy_v3.json', encoding='utf-8'))
+eco = json.load(open(ROOT + '/themes/dhaba/economy.json', encoding='utf-8'))
 def walk(o, path):
     if isinstance(o, dict):
         for k, v in o.items(): yield from walk(v, path + [k])

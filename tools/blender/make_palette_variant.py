@@ -14,8 +14,8 @@ stays, so torans still read as fresh leaves.
 
 Plain Python (no Blender, no PIL): reads and writes 8-bit PNGs with zlib.
 
-  python3 -I tools/blender/make_palette_variant.py [--in assets/models/palette.png]
-                                                    [--out assets/models/palette_nh48.png]
+  python3 -I tools/blender/make_palette_variant.py [--in themes/dhaba/models/palette.png]
+                                                    [--out themes/dhaba/models/palette_nh48.png]
 
 It checks that the input atlas is the palette of build_assets.py (every swatch cell's centre),
 then repaints whole 16 x 16 cells and prints every swatch it changed.

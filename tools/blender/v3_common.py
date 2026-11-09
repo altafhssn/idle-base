@@ -246,7 +246,7 @@ def fairy_material():
     """Unlit material for the bulbs: exported as KHR_materials_unlit, colour = COLOR_0, so
     Godot's importer gives an UNSHADED StandardMaterial3D with albedo-from-vertex-colour
     (bulbs show their colours with no code). The twinkle needs the shader
-    res://assets/models/fairy_bulb.gdshader (see docs in v3_exterior.py)."""
+    res://themes/dhaba/models/fairy_bulb.gdshader (see docs in v3_exterior.py)."""
     if not _FAIRY_MAT:
         m = bpy.data.materials.new("fairy_bulb")
         ensure_nodes(m)

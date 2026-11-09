@@ -4,7 +4,7 @@
 
 Mirrors scripts/autoload/game.gd (prices, costs, galla, waiters, table sets,
 tasks, ad bubble, the drink + dish ORDER RULE, the station MENUS) and reads
-data/economy_v3.json. Stations: chai, tandoor (the tutorial), then the
+themes/dhaba/economy.json. Stations: chai, tandoor (the tutorial), then the
 buildable LASSI (drink, 2 waiters) and KADAI (dish, 3 waiters; docs/
 v3-station-menus.md, 2026-10-21, one station where the egg bhurji and dal
 makhani stood).
@@ -118,7 +118,7 @@ Exit status 1 when the menu check, the bill check or the rule check fails.
 
 Usage:
   python3 tools/sim/pacing_v3.py [--seeds 300] [--minutes 60] [--no-ads] [--seed 0]
-                                 [--eco data/economy_v3.json] [--matrix] [--report 120]
+                                 [--eco themes/dhaba/economy.json] [--matrix] [--report 120]
                                  [--set PATH=VALUE] [--difficulty D]
                                  [--promo] [--no-signboard] [--no-trays] [--realized R]
                                  [--ad-sessions M] [--starter MIN] [--starter-amount REF]
@@ -133,7 +133,7 @@ import statistics
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-ECO_PATH = ROOT / "data" / "economy_v3.json"
+ECO_PATH = ROOT / "themes" / "dhaba" / "economy.json"
 DT = 0.05
 
 # Money pill read off the reference frames (value shown at that second).
@@ -2390,7 +2390,7 @@ def main():
     ap.add_argument("--minutes", type=float, default=60.0)
     ap.add_argument("--no-ads", action="store_true")
     ap.add_argument("--seed", type=int, default=0, help="reference run whose end state starts part B")
-    ap.add_argument("--eco", default=str(ECO_PATH), help="economy JSON (default data/economy_v3.json)")
+    ap.add_argument("--eco", default=str(ECO_PATH), help="economy JSON (default themes/dhaba/economy.json)")
     ap.add_argument("--matrix", action="store_true", help="also print the arrivals rule check per floor setup")
     ap.add_argument("--report", type=float, default=120.0, help="part B report row interval in seconds (default 120)")
     ap.add_argument("--set", action="append", default=[], metavar="PATH=VALUE",

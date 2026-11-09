@@ -96,7 +96,7 @@ func _run() -> void:
 	var pivot := Node3D.new()
 	pivot.rotation = Vector3(0.0, TURN_YAW, 0.0)
 	view.add_child(pivot)
-	var path := "res://assets/models/munshi_%s.glb" % _pose
+	var path := "res://themes/dhaba/models/munshi_%s.glb" % _pose
 	if not ResourceLoader.exists(path):
 		push_error("make_splash: missing " + path)
 		quit(3)

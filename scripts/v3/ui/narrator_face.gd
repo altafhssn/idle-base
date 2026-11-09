@@ -8,10 +8,10 @@ extends RefCounted
 ## 3D Rani (5 Nov): her face rendered from the idle bust (FACE_3D, square,
 ## transparent) wins over the 2D cut when it exists.
 
-const SPRITE := "res://assets/textures/narrator/narrator_idle.png"
+static var SPRITE: String = ThemePack.textures_dir() + "narrator/narrator_idle.png"
 ## Her face on the idle sprite: a square from the hair top to the chin.
 const FACE := Rect2(330, 72, 190, 190)
-const FACE_3D := "res://assets/textures/narrator/rani_face.png"
+static var FACE_3D: String = ThemePack.textures_dir() + "narrator/rani_face.png"
 
 
 ## A `sz` px round face on `bg` with a `ring` border.

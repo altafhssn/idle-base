@@ -12,7 +12,7 @@ anywhere (Finder, a phone, a browser):
                     example a game recording from Godot's --write-movie)
 
   /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
-      --python tools/audio/preview.py -- assets/audio docs/polish/audio [--clip name=path.wav ...]
+      --python tools/audio/preview.py -- themes/dhaba/audio docs/polish/audio [--clip name=path.wav ...]
 """
 import os
 import sys

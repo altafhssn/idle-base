@@ -30,9 +30,9 @@ const PIC_ONE := Vector2(420, 280)
 const BTN_SIZE := Vector2(420, 92)
 const ITEM_PX := 18
 const ITEM_H := 30.0
-const RENO_BEFORE := "res://assets/textures/reno_before.png"
-const RENO_AFTER := "res://assets/textures/reno_after.png"
-const NH48_PREVIEW := "res://assets/textures/nh48_preview.png"
+static var RENO_BEFORE: String = ThemePack.textures_dir() + "reno_before.png"
+static var RENO_AFTER: String = ThemePack.textures_dir() + "reno_after.png"
+static var NH48_PREVIEW: String = ThemePack.textures_dir() + "nh48_preview.png"
 
 var gate: Callable = Callable()
 ## "renovation" | "move".

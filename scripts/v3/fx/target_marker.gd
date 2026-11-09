@@ -145,7 +145,7 @@ func _build() -> void:
 	_spinner = Node3D.new()
 	_spinner.name = "Spinner"
 	add_child(_spinner)
-	if USE_GLB and ResourceLoader.exists(Models.DIR + MODEL_ID + ".glb"):
+	if USE_GLB and Models.exists(MODEL_ID):
 		var model: Node3D = Models.make(MODEL_ID)
 		_spinner.add_child(model)
 		FxModel.normalise_width(model, SIDE, Vector3(0.5, 0.0, 0.5))

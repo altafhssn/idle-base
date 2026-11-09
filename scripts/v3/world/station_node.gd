@@ -295,7 +295,7 @@ func setup(p_id: String, p_sim: Sim = null) -> void:
 ## BOARD_TEXT lines as Label3Ds on the prop (only over the real glb: the
 ## fallback box has no board).
 func _add_board_text() -> void:
-	if not BOARD_TEXT.has(id) or not ResourceLoader.exists(Models.DIR + Layout3.station_model(id) + ".glb"):
+	if not BOARD_TEXT.has(id) or not Models.exists(Layout3.station_model(id)):
 		return
 	var font: Font = load("res://ui/main_font.tres") as Font
 	for v in BOARD_TEXT[id]:
@@ -875,7 +875,7 @@ func _show_stool(on: bool) -> void:
 ## W1-ART1's `plate_stool` (a wooden stool, top y 0.62, with a round steel
 ## tray R 0.28); until it exists a code stool of the same size.
 static func _make_stool() -> Node3D:
-	if ResourceLoader.exists(Models.DIR + "plate_stool.glb"):
+	if Models.exists("plate_stool"):
 		return Models.make("plate_stool")
 	var root := Node3D.new()
 	var top: float = Layout3.PLATE_STOOL_TOP

@@ -1,0 +1,24 @@
+{
+  "_comment": "Idle Business Kit theme pack: Dhaba Rush (the reference pack). Phase 2 (9 Nov 2026): the game block, the switchable systems and the business words. Engine code reads this through ThemePack; later phases move counters, layouts, text, story and the UI skin in here too.",
+  "kit_version": 1,
+  "game": {
+    "name": "Dhaba Rush",
+    "package": "com.littletagartstudios.dhabarush",
+    "version": "0.3.7"
+  },
+  "systems": {
+    "story": true,
+    "road": true,
+    "growth": true,
+    "events": true
+  },
+  "words": {
+    "business": "DHABA",
+    "service_point": "COUNTER",
+    "checkout": "CASH COUNTER",
+    "server": "WAITER",
+    "seat_set": "TABLE",
+    "customer": "TRAVELLER",
+    "currency": "₹"
+  }
+}

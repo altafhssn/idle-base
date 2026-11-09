@@ -6,10 +6,10 @@ pacing tool's seated model (tools/sim/pacing_v3.py: part A tutorial replay, then
 the expected-value SeatedModel of part B with the --promo bot) and adds, on top:
 more highways, a hotel stage per highway, the Izzat meta currency with perks,
 dish-mastery stars, a sessions mode and purchase-cadence statistics. It never
-writes anything and never changes pacing_v3.py or data/economy_v3.json.
+writes anything and never changes pacing_v3.py or themes/dhaba/economy.json.
 
 OVERLAYS: tools/sim/content10h/<name>.json. Everything except the "content" key
-is deep-merged in memory over data/economy_v3.json (dicts merge key by key;
+is deep-merged in memory over themes/dhaba/economy.json (dicts merge key by key;
 lists and numbers replace; null deletes a key), so an overlay can change any
 economy number. The "content" key holds the new mechanics (below). The empty
 overlay (content10h/none.json = {}) is today's game: --check proves it gives
