@@ -1037,7 +1037,7 @@ func can_interrupt(kind: String) -> bool:
 ## launch's pop-up: lead decision 6(c)), "open" (something is on screen).
 func interrupt_block_reason(kind: String) -> String:
 	if kind == "consent":
-		if Game.station_level("chai") < CONSENT_MIN_CHAI:
+		if Game.station_level(Game.core_station()) < CONSENT_MIN_CHAI:
 			return "level"
 		if not Game.is_tutorial_done() and not _tutorial_calm_free():
 			return "tutorial"
@@ -1058,7 +1058,7 @@ func interrupt_block_reason(kind: String) -> String:
 ## the tutorial and the card may open here (chai Lv 10+), so WELCOME BACK and
 ## the eco note give way to it.
 func _consent_card_first() -> bool:
-	if Game.station_level("chai") < CONSENT_MIN_CHAI:
+	if Game.station_level(Game.core_station()) < CONSENT_MIN_CHAI:
 		return false
 	return Analytics.has_method("card_pending") and bool(Analytics.call("card_pending"))
 
@@ -2134,7 +2134,7 @@ func _on_daftar_action(id: String) -> void:
 		return
 	# C1 review: the tandoor too (it pops in once BUILD has closed, see
 	# WorldJuice), except in the tutorial's BUILD beat, whose outro shows it.
-	if Layout3.BUILD_PAD_IDS.has(sid) or (sid == "tandoor" and not _tutorial_build_beat()):
+	if Layout3.BUILD_PAD_IDS.has(sid) or (sid == Game.station_with_role("first_build") and not _tutorial_build_beat()):
 		get_tree().create_timer(0.12).timeout.connect(_after_station_built.bind(sid))
 
 

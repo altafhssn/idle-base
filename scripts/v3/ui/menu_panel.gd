@@ -20,7 +20,6 @@ const ROW_H := 176.0
 const MENU_GAP := 16.0
 const BAR_SIZE := Vector2(300, 18)
 const MORE_SIZE := Vector2(120, 48)
-const ICONS := {"chai": "kettle", "tandoor": "tandoor", "lassi": "lassi", "kadai": "kadai"}
 
 var _rows: Dictionary = {}     # station id -> {card, name, lvl, gain, dish, bar, btn, more, locked}
 var _sig: String = ""
@@ -86,7 +85,7 @@ func _rebuild() -> void:
 func _make_row(id: String, y: float) -> Dictionary:
 	var card: Panel = _row_card(y, ROW_H)
 	card.name = "Menu_" + id
-	var ic := UiIcon.new(str(ICONS.get(id, "bowl")), Vector2(84, 84), Color.WHITE, UiKit.MARIGOLD_PALE)
+	var ic := UiIcon.new(str(UiKit.station_ui(id).get("menu_icon", "bowl")), Vector2(84, 84), Color.WHITE, UiKit.MARIGOLD_PALE)
 	ic.pad = 0.1
 	ic.position = Vector2(16, 20)
 	card.add_child(ic)

@@ -601,7 +601,7 @@ func _ready() -> void:
 		hold_spawns = true
 	if build_static_world:
 		_build_static()
-	elif not Game.is_built("tandoor"):
+	elif Game.station_with_role("first_build") != "" and not Game.is_built(Game.station_with_role("first_build")):
 		_add_tandoor_lock()
 	seats_occ.resize(Layout3.seat_count_layout())
 	seats_occ.fill(null)
@@ -624,7 +624,7 @@ func _ready() -> void:
 	traffic.pass_at_gate.connect(_on_pass_at_gate)
 	_build_waiter_stand()
 	for id: String in _station_order():
-		if id == "chai" or Game.is_built(id):
+		if id == Game.core_station() or Game.is_built(id):
 			_add_station(id, false)
 	_sync_gallas()
 	_sync_tables(false)
@@ -643,7 +643,8 @@ func _ready() -> void:
 	# move to NH 48 only chai stands, and Gopal's hall box comes only with
 	# these; the family layout exists only after the tutorial, so a forced
 	# --layout=family tutorial keeps the old boxes)
-	if stations.has("lassi") or _pad_id == "lassi" or (is_family_layout() and Game.is_tutorial_done()):
+	var first_pad: String = Game.station_with_role("first_pad")
+	if (first_pad != "" and (stations.has(first_pad) or _pad_id == first_pad)) or (is_family_layout() and Game.is_tutorial_done()):
 		_apply_free_play_taps()
 	if build_static_world:
 		_add_world_props()
@@ -695,8 +696,8 @@ func inject_galla_queue(n: int = 5, count_served: bool = true) -> void:
 		if not opts.is_empty() and stations.has(opts[0]):
 			basket += Game.price(opts[0])
 	if basket <= 0.0:
-		basket = Game.price("chai")
-	var last: StationNode = get_station("chai")
+		basket = Game.price(Game.core_station())
+	var last: StationNode = get_station(Game.core_station())
 	for _k in n:
 		var t: Traveller = _make_traveller(g.pay_spot, "")
 		t.basket_total = basket
@@ -710,7 +711,7 @@ func inject_galla_queue(n: int = 5, count_served: bool = true) -> void:
 		g.inject(t)
 		t.pop_in()
 	if n > 0 and count_served:
-		Game.task_event("served", {"station": last.id if last != null else "chai", "count": n})
+		Game.task_event("served", {"station": last.id if last != null else Game.core_station(), "count": n})
 
 
 ## Returning players: n travellers already on their way in (spread along the
@@ -1601,8 +1602,9 @@ func waiter_trip_s(key: String) -> float:
 ## The tutorial and its reference pacing are unchanged.
 func capacity_estimate() -> Dictionary:
 	var assume: Array = []
-	if _tutorial_plans_tandoor() and not stations.has("tandoor"):
-		assume.append("tandoor")
+	var first_build: String = Game.station_with_role("first_build")
+	if _tutorial_plans_first_build() and first_build != "" and not stations.has(first_build):
+		assume.append(first_build)
 	var mix: Array = Game.order_mix(assume)
 	var items: float = 0.0
 	var proc: float = 0.0
@@ -1626,8 +1628,8 @@ func capacity_estimate() -> Dictionary:
 		shares[id] = sh
 		st_cap = minf(st_cap, 60.0 / maxf(0.1, Game.processing_time(id)) * float(maxi(1, Game.station_employees(id))) / sh)
 	if mix.is_empty() or st_cap == INF:
-		st_cap = Game.station_capacity_per_min("chai")
-		per_trav = waiter_trip_s("chai")
+		st_cap = Game.station_capacity_per_min(Game.core_station())
+		per_trav = waiter_trip_s(Game.core_station())
 		items = 1.0
 	items = maxf(1.0, items)
 	var n_w: int = maxi(1, Game.waiter_count())
@@ -1724,8 +1726,9 @@ func _tray_k_of(i: int) -> int:
 ## In the tutorial's ad chain (ramp on, tandoor not built yet) the ramp plans
 ## for the tandoor the very next beat builds: arrivals settle before every
 ## new traveller orders two items, instead of a backlog right after it.
-func _tutorial_plans_tandoor() -> bool:
-	if Game.is_tutorial_done() or Game.is_built("tandoor") or debug_arrivals_tpm > 0.0:
+func _tutorial_plans_first_build() -> bool:
+	var fb: String = Game.station_with_role("first_build")
+	if Game.is_tutorial_done() or fb == "" or Game.is_built(fb) or debug_arrivals_tpm > 0.0:
 		return false
 	return _ref_over or TUTORIAL_STEPS.find(str(Game.tutorial_get("step", "intro"))) >= TUTORIAL_STEPS.find("ad_deal")
 
@@ -2185,7 +2188,7 @@ func _station_order() -> Array[String]:
 		if Layout3.STATION_IDS.has(id):
 			out.append(id)
 	if out.is_empty():
-		out.append("chai")
+		out.append(Game.core_station())
 	return out
 
 
@@ -2198,8 +2201,8 @@ func _route_for_new() -> Array[String]:
 	return out
 
 
-func _tandoor_built() -> bool:
-	return stations.has("tandoor")
+func _first_build_built() -> bool:
+	return stations.has(Game.station_with_role("first_build"))
 
 
 # ================================================================ seats + door line
@@ -2369,8 +2372,8 @@ func on_traveller_seated(t: Traveller) -> void:
 	for id: String in Game.pick_order(order_rng):
 		if stations.has(id):
 			ids.append(id)
-	if ids.is_empty() and stations.has("chai"):
-		ids.append("chai")
+	if ids.is_empty() and stations.has(Game.core_station()):
+		ids.append(Game.core_station())
 	# C3.5: a fan orders his dish (his counter takes the place of the one of
 	# the same menu group; no draw for that ticket)
 	var pref_st: String = _pref_station(t)
@@ -3510,7 +3513,7 @@ func _rebalance_into(g: GallaNode) -> void:
 
 
 func _on_building_built(id: String) -> void:
-	if id == "tandoor":
+	if id == Game.station_with_role("first_build"):
 		_remove_tandoor_lock()
 	if Layout3.BUILD_PAD_IDS.has(id):
 		# Menu expansion §6: the ghost fades, the station is added hidden (no
@@ -3527,7 +3530,7 @@ func _on_building_built(id: String) -> void:
 	else:
 		_add_station(id, true)
 	_update_build_pad()
-	if id == "lassi":
+	if id == Game.station_with_role("first_pad"):
 		_apply_free_play_taps()
 
 
@@ -3559,7 +3562,7 @@ func _update_build_pad(pop: bool = true) -> void:
 	if want == "":
 		return
 	_add_build_pad(want, pop)
-	if want == "lassi":
+	if want == Game.station_with_role("first_pad"):
 		_apply_free_play_taps()
 
 
@@ -3834,7 +3837,8 @@ func _build_static() -> void:
 		var fh: Node3D = Models.make("family_hall")
 		fh.name = "FamilyHall"
 		add_child(fh)
-	if not Game.is_built("tandoor") and Layout3.stage_id() != "cart":
+	var fb_lock: String = Game.station_with_role("first_build")
+	if fb_lock != "" and not Game.is_built(fb_lock) and Layout3.stage_id() != "cart":
 		_add_tandoor_lock()
 
 

@@ -16,7 +16,7 @@ staff, seats or bays, checkout, customers); the pack names and draws them.
 |---|---|---|
 | 1 | Template repo and test harness | Done (see below) |
 | 2 | Pack loader and checker | Done (see below) |
-| 3 | Names out of the code | Not started |
+| 3 | Names out of the code | In progress: step 1 of 5 done |
 | 4 | Layouts from markers | Not started |
 | 5 | Switchable systems | Not started |
 | 6 | Tutorial and story as data | Not started |
@@ -73,6 +73,27 @@ themes/dhaba/
 - The tools (Blender builder, pacing simulator, sound scripts) write to and read from the pack.
 - Known gap for phase 3: the checker's sound list is still the dhaba's (chai pour, tandoor
   slap...); it becomes per pack when names move out of the code.
+
+## Phase 3: names out of the code
+
+Five steps, each tested and committed on its own:
+
+1. **Counters as data (done).** Each station's economy entry carries what the engine used to
+   know by its id: `role` (`core` = always built, the tutorial starts on it; `first_build` = the
+   tutorial's build, locked until then; `first_pad` = the first ghost-pad build of free play;
+   `reveal_stats` = brings STATS and opens the signboard), `short_name`, `unit` / `units`,
+   `next_chip_skip`, `ui` {icon, menu_icon, doodles, info} and `fx` {cook_sound, dish_sounds,
+   cook_pose, steam_local, parts {spin, stir, heap, lid}, board_text, fires}. `Game.core_station()`
+   and `Game.station_with_role()` replace the names. The old-save migration (bhurji/dal -> kadai)
+   is pack data (`legacy`); growth stage titles are `growth.stages[n].title`; a growth build's
+   `core_level` replaces `chai_level` (still read for older packs).
+2. Sounds and words per pack.
+3. Money style per pack.
+4. The checkout ("galla") renamed in engine code.
+5. A word check in the suite.
+
+Layout (phase 4), the tutorial and story (phase 6) and the test drivers keep their dhaba names
+until their own phases.
 
 ## Ported fixes (Dhaba Rush <-> Idle Business Kit)
 

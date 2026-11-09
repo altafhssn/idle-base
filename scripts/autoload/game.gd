@@ -365,8 +365,8 @@ const HUD_ELEMENT_ALIAS := {
 const REVEAL_NOTES_V := "hud_v2"
 ## The 3rd task claim brings the chest icon (ui-proposal §3.3).
 const REVEAL_CHEST_CLAIMS := 3
-## The kadai brings STATS to the HUD (owner decision 5).
-const REVEAL_STATS_STATION := "kadai"
+## The station with role "reveal_stats" brings STATS to the HUD (owner
+## decision 5; the kadai in the dhaba pack).
 
 ## Round 2 step 2: STAFF roles, the Game stage each one feeds and back.
 const STAFF_ROLES := ["waiters", "cashiers", "cooks"]
@@ -530,13 +530,9 @@ var menu_seen: Dictionary = {}
 ## Station menus (saved "dish_counts"): items served per full dish id
 ## (HISAAB "TOP DISH").
 var dish_counts: Dictionary = {}
-## Old-save migration (bhurji / dal -> kadai): the ids of the retired
-## stations and their KAAM defs.
-const LEGACY_STATIONS := {"bhurji": "kadai", "dal": "kadai"}
-const LEGACY_TASK_IDS := {
-	"build_bhurji": "build_kadai", "bhurji_serve30": "kadai_serve30", "bhurji_l25": "kadai_l25", "bhurji_hire2": "kadai_hire2",
-	"build_dal": "build_kadai", "dal_serve30": "kadai_serve30", "dal_l25": "kadai_l25", "dal_hire2": "kadai_hire2",
-}
+## Old-save migration (the dhaba's bhurji / dal -> kadai): the retired
+## stations, their task ids and the station they merge into come from the
+## pack's economy "legacy" block (none = nothing to migrate).
 ## Foreground seconds of play since the tutorial ended (saved "free_play_s").
 var free_play_s: float = 0.0
 ## Day / night cycle phase 0..1 (0 = dawn; saved "day_phase", default and
@@ -1633,8 +1629,8 @@ func debug_set_level(id: String, lvl: int) -> void:
 func _ddef() -> Dictionary:
 	var d: Dictionary = _dict(eco, "difficulty")
 	if d.is_empty():
-		return {"cost_mult": 1.0, "exempt_levels_below": {"chai": 25}, "exempt_speed": ["chai"],
-				"exempt_builds": ["tandoor"], "exempt_waiter_hires": 1, "exempt_tables": 1}
+		return {"cost_mult": 1.0, "exempt_levels_below": {core_station(): 25}, "exempt_speed": [core_station()],
+				"exempt_builds": [station_with_role("first_build")], "exempt_waiter_hires": 1, "exempt_tables": 1}
 	return d
 
 
@@ -1747,12 +1743,33 @@ func _orders_def() -> Dictionary:
 	return _dict(eco, "orders")
 
 
-## Station field "menu_group" (default: "drink" for chai, else "dish").
+## Station field "menu_group" (default "dish").
 func menu_group(id: String) -> String:
-	var d: Dictionary = station_def(id)
-	if d.has("menu_group"):
-		return str(d["menu_group"])
-	return "drink" if id == "chai" else "dish"
+	return str(station_def(id).get("menu_group", "dish"))
+
+
+## Idle Business Kit: the pack's first service point (the economy's first
+## station in station_order, or the one with role "core"): always built, the
+## tutorial starts on it, an empty order falls back to it.
+func core_station() -> String:
+	var c: String = station_with_role("core")
+	if c != "":
+		return c
+	var ids: Array[String] = station_ids()
+	return ids[0] if not ids.is_empty() else ""
+
+
+## The station whose economy entry has "role": role ("" when none):
+## "core", "first_build" (the tutorial's build), "first_pad" (the first
+## ghost-pad build of free play), "reveal_stats" (brings STATS, opens the
+## signboard).
+func station_with_role(role: String) -> String:
+	var defs: Dictionary = _dict(eco, "stations")
+	for id in defs.keys():
+		var d: Variant = defs[id]
+		if d is Dictionary and str((d as Dictionary).get("role", "")) == role:
+			return str(id)
+	return ""
 
 
 ## Station field "order_weight" (default 1.0).
@@ -1834,7 +1851,7 @@ func order_mix(assume_built: Array = []) -> Array:
 		var c: Dictionary = cv
 		var ids2: Array[String] = c["ids"]
 		if ids2.is_empty():
-			ids2.append("chai")
+			ids2.append(core_station())
 	return combos
 
 
@@ -3557,7 +3574,8 @@ func _check_reveals() -> void:
 			reveal_hud("hud_tasks")
 	if claims_total >= REVEAL_CHEST_CLAIMS:
 		reveal_hud("hud_chest")
-	if is_built(REVEAL_STATS_STATION):
+	var rs: String = station_with_role("reveal_stats")
+	if rs != "" and is_built(rs):
 		reveal_hud("hud_stats")
 	# Story (4 Nov): PHONE with Simran's first message.
 	if bool(_sys_call("story", "has", ["day1"], false)):
@@ -5053,7 +5071,7 @@ func signboard_unlocked() -> bool:
 	var d: Dictionary = _sbdef()
 	if d.is_empty():
 		return false
-	var req: String = str(d.get("requires", "kadai"))
+	var req: String = str(d.get("requires", station_with_role("reveal_stats")))
 	return req == "" or is_built(req)
 
 
@@ -5294,9 +5312,12 @@ func growth_state() -> Dictionary:
 	var needs: String = ""
 	var needs_n: int = 0
 	var needs_name: String = ""
-	if req.has("chai_level") and station_level("chai") < int(req["chai_level"]):
-		needs = "Chai at Lv {n}"
-		needs_n = int(req["chai_level"])
+	# "core_level" (older packs: "chai_level") = the core station's level.
+	var core_req: int = int(req.get("core_level", req.get("chai_level", 0)))
+	if core_req > 0 and station_level(core_station()) < core_req:
+		needs = "{name} at Lv {n}"
+		needs_n = core_req
+		needs_name = str(station_def(core_station()).get("short_name", core_station())).capitalize()
 	elif req.has("built") and not is_built(str(req["built"])):
 		# Audit fix: the station's name goes in after translation ({name}).
 		needs = "Build the {name} first"
@@ -5313,7 +5334,8 @@ func growth_state() -> Dictionary:
 	elif not can_afford(cost):
 		reason = "cash"
 	var unlocked: bool = reason == "" or reason == "cash"
-	return {"shown": true, "kind": kind, "title": "THE SHACK" if kind == "shack" else "THE DHABA",
+	var stage_title: String = str(stage_def(STAGE_IDS.find(kind)).get("title", kind.to_upper()))
+	return {"shown": true, "kind": kind, "title": stage_title,
 			"unlocked": unlocked, "affordable": reason == "", "building": building, "cost": cost,
 			"short": maxf(0.0, cost - cash), "dur": build_dur(kind), "reason": reason, "needs": needs, "needs_n": needs_n,
 			"needs_name": needs_name}
@@ -6517,7 +6539,7 @@ func load_game() -> bool:
 	var uv: Variant = d.get("task_used", [])
 	if uv is Array:
 		for v in (uv as Array):
-			_task_used[str(LEGACY_TASK_IDS.get(str(v), str(v)))] = true
+			_task_used[str(_dict(_dict(eco, "legacy"), "task_ids").get(str(v), str(v)))] = true
 	var tv: Variant = d.get("tasks", [])
 	if tv is Array and (tv as Array).size() == task_slots():
 		var loaded: Array = []
@@ -6737,15 +6759,15 @@ func _eco_note_budget_tick(delta: float) -> void:
 
 
 ## Old saves (bhurji / dal -> kadai, docs/v3-station-menus.md §6): a saved
-## slot's station and id are remapped (LEGACY_STATIONS / LEGACY_TASK_IDS),
+## slot's station and id are remapped (the economy's legacy.stations / task_ids),
 ## its progress kept; a build card for a now-built kadai completes on the
 ## next _refresh_abs_tasks. The "dish" field (served_dish cards) is carried.
 func _sanitize_task(src: Dictionary) -> Dictionary:
 	var kind: String = str(src.get("kind", "earned"))
 	var st: String = str(src.get("station", ""))
-	st = str(LEGACY_STATIONS.get(st, st))
+	st = str(_dict(_dict(eco, "legacy"), "stations").get(st, st))
 	var tid: String = str(src.get("id", ""))
-	tid = str(LEGACY_TASK_IDS.get(tid, tid))
+	tid = str(_dict(_dict(eco, "legacy"), "task_ids").get(tid, tid))
 	return {
 		"id": tid,
 		"kind": kind,
@@ -6767,13 +6789,15 @@ func _sanitize_task(src: Dictionary) -> Dictionary:
 ## and speed of the bhurji (of the dal only when the bhurji is absent or
 ## unbuilt). Unbuilt legacy entries are ignored.
 func _migrate_legacy_stations(sd: Dictionary) -> void:
-	if station_def("kadai").is_empty():
+	var leg: Dictionary = _dict(eco, "legacy")
+	var into: String = str(leg.get("merge_into", ""))
+	if into == "" or station_def(into).is_empty():
 		return
 	var lvl: int = 0
 	var emp: int = -1
 	var proc: int = -1
 	var from: Array = []
-	for old in ["bhurji", "dal"]:
+	for old in _dict(leg, "stations").keys():
 		var v: Variant = sd.get(old, null)
 		if not (v is Dictionary) or not bool((v as Dictionary).get("built", false)):
 			continue
@@ -6785,14 +6809,14 @@ func _migrate_legacy_stations(sd: Dictionary) -> void:
 			proc = int(src.get("proc", 0))
 	if from.is_empty():
 		return
-	var s: Dictionary = _state("kadai")
-	var sdef: Dictionary = station_def("kadai")
+	var s: Dictionary = _state(into)
+	var sdef: Dictionary = station_def(into)
 	s["built"] = true
 	s["level"] = clampi(lvl, 1, int(sdef.get("max_level", 300)))
-	s["employees"] = clampi(emp, 1, station_employees_max("kadai"))
+	s["employees"] = clampi(emp, 1, station_employees_max(into))
 	s["proc"] = clampi(proc, 0, int(sdef.get("processing_max", 30)))
-	print("[game] save migrated: %s -> kadai L%d (%d cooks, speed %d)" % ["+".join(PackedStringArray(from)), s["level"], s["employees"], s["proc"]])
-	Analytics.event("save_migrated", {"from": "bhurji+dal", "level": int(s["level"]), "built": from})
+	print("[game] save migrated: %s -> %s L%d (%d cooks, speed %d)" % ["+".join(PackedStringArray(from)), into, s["level"], s["employees"], s["proc"]])
+	Analytics.event("save_migrated", {"from": "+".join(PackedStringArray(_dict(leg, "stations").keys())), "level": int(s["level"]), "built": from})
 
 
 ## Debug / settings: deletes the save and starts over (keeps IAP entitlements).

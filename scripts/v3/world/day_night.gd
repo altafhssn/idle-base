@@ -27,12 +27,8 @@ extends Node
 
 signal band_changed(band: String)
 
-const STATION_FIRES := {
-	# station id -> [[local point (prop space), radius, pool radius]]
-	"chai": [[Vector3(-0.86, 0.80, 0.24), 0.34, 1.5]],
-	"tandoor": [[Vector3(-0.5, 1.12, -0.05), 0.45, 1.7]],
-	"kadai": [[Vector3(-0.22, 0.16, 0.30), 0.32, 1.5]],
-}
+## Fire-mouth glows per station come from the pack: the station's economy
+## "fx.fires" = [[[x, y, z] prop-local point, radius, pool radius], ...].
 const FIRE_COLOR := Color(1.0, 0.45, 0.12)
 const FIRE_POOL_COLOR := Color(0.75, 0.32, 0.08)
 const GfxQuality := preload("res://scripts/v3/core/gfx_quality.gd")
@@ -307,7 +303,10 @@ func _build_static_glows(lights: Dictionary) -> void:
 func _attach_fires() -> void:
 	if sim == null:
 		return
-	for id: String in STATION_FIRES.keys():
+	for id: String in Game.station_ids():
+		var fires: Variant = (Game.station_def(id).get("fx", {}) as Dictionary).get("fires", []) if Game.station_def(id).get("fx", {}) is Dictionary else []
+		if not (fires is Array) or (fires as Array).is_empty():
+			continue
 		if _fires_done.has(id):
 			continue
 		var st: StationNode = sim.get_station(id)
@@ -315,12 +314,12 @@ func _attach_fires() -> void:
 			continue
 		_fires_done[id] = true
 		var b := NightGlow.Builder.new()
-		for v in STATION_FIRES[id]:
+		for v in fires:
 			var e: Array = v
-			b.glow(e[0], float(e[1]), FIRE_COLOR, true)
+			var gp: Vector3 = Vector3(float(e[0][0]), float(e[0][1]), float(e[0][2]))
+			b.glow(gp, float(e[1]), FIRE_COLOR, true)
 			var pr: float = float(e[2])
 			if pr > 0.0:
-				var gp: Vector3 = e[0]
 				b.pool(Vector3(gp.x, 0.06, gp.z), pr, FIRE_POOL_COLOR)
 		var mi := NightGlow.make_instance(b.commit(), _glow_mat, 1.0)
 		mi.name = "FireGlow"

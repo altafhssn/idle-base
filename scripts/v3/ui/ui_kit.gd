@@ -56,21 +56,10 @@ const GHOST_CYAN := Color(0.36, 0.93, 1.0)      # ghost table / its price tag
 const GHOST_BG := Color(0.02, 0.18, 0.22, 0.84)
 const SEATS_PER_TABLE := 4                      # one table + two charpais
 
-## UI-only station extras (names, products, colours come from Game/economy).
-## Station menus (docs/v3-station-menus.md §8.1): every info ends with the
-## menu note; the kadai replaces the egg bhurji / dal entries.
-const STATION_UI := {
-	# "info" is an English msgid (shown through t()).
-	"chai": {"icon": "kettle", "doodles": ["kettle", "kulhad", "steam", "leaf"],
-		"info": "LEVEL UP raises the price of every cup. STAFF and SPEED pour for more travellers. New dishes join the menu at L25, L50 and L100."},
-	"tandoor": {"icon": "roti", "doodles": ["roti", "tandoor", "flame"],
-		"info": "LEVEL UP raises the price of every roti. STAFF and SPEED feed more drivers. New dishes join the menu at L25, L50 and L100."},
-	# Menu expansion (docs/v3-menu-expansion.md §8).
-	"lassi": {"icon": "lassi", "doodles": ["matka", "glass", "churner", "leaf"],
-		"info": "LEVEL UP raises the price of every glass. STAFF and SPEED churn for more travellers. New dishes join the menu at L25, L50 and L100."},
-	"kadai": {"icon": "kadai", "doodles": ["kadai", "karchhi", "flame", "steam"],
-		"info": "LEVEL UP raises the price of every plate. STAFF and SPEED cook for more drivers. New dishes join the menu at L25, L50 and L100."},
-}
+## UI-only station extras come from the pack: each station's economy entry
+## "ui" = {icon, menu_icon, doodles, info} ("info" is an English msgid shown
+## through t()); "unit" / "units" name one sale (Idle Business Kit phase 3).
+const STATION_UI_DEFAULT := {"icon": "kulhad", "doodles": ["leaf", "steam"], "info": ""}
 
 static var _font_bold: Font
 static var _font_body: Font
@@ -445,9 +434,10 @@ static func fx_call(method: String, args: Array) -> bool:
 
 # ================================================================ game data helpers
 static func station_ui(id: String) -> Dictionary:
-	if STATION_UI.has(id):
-		return STATION_UI[id]
-	return {"icon": "kulhad", "doodles": ["leaf", "steam"], "info": ""}
+	var u: Variant = Game.station_def(id).get("ui", null)
+	if u is Dictionary and not (u as Dictionary).is_empty():
+		return u
+	return STATION_UI_DEFAULT
 
 
 ## "NAME / name_hi" when the station has a Hindi name (the menu-expansion
@@ -479,32 +469,15 @@ static func station_color(id: String) -> Color:
 	return Game.station_color(id)
 
 
-## What one sale of the station is called (A6): chai "cup", tandoor "roti",
-## lassi "glass", kadai "plate"; "item" otherwise (translated, msgctxt "unit").
+## What one sale of the station is called (A6): the station's "unit" /
+## "units" in the pack (the dhaba: cup, roti, glass, plate); "item" otherwise
+## (translated, msgctxt "unit").
 static func station_unit(id: String) -> String:
-	match id:
-		"chai":
-			return t("cup", "unit")
-		"tandoor":
-			return t("roti", "unit")
-		"lassi":
-			return t("glass", "unit")
-		"kadai":
-			return t("plate", "unit")
-	return t("item", "unit")
+	return t(str(Game.station_def(id).get("unit", "item")), "unit")
 
 
 static func station_unit_plural(id: String) -> String:
-	match id:
-		"chai":
-			return t("cups", "unit")
-		"tandoor":
-			return t("rotis", "unit")
-		"lassi":
-			return t("glasses", "unit")
-		"kadai":
-			return t("plates", "unit")
-	return t("items", "unit")
+	return t(str(Game.station_def(id).get("units", "items")), "unit")
 
 
 ## 1 "1ST", 2 "2ND", 3 "3RD", 4 "4TH" ... (upper case; callers lower it).

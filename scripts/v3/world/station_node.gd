@@ -133,13 +133,16 @@ const STEAM_ALPHA := 0.8
 const STEAM_SIZE0 := 0.16
 const STEAM_SIZE1 := 0.5
 const ANIM_EASE := 0.3            # s to ease a part back to rest when idle
-## Steam fallback (station-local) when the glb has no steam_socket.
-const STEAM_LOCAL := {"kadai": Vector3(-0.22, 1.05, -0.02)}
-## Cook sound when a ticket starts (if the station is on screen): looked up
-## by the full dish id first, then the station id (station menus §9).
-const COOK_SOUND := {"chai": "chai_pour", "tandoor": "tandoor_slap",
-		"lassi": "churn", "kadai.bhurji": "egg_crack", "kadai.dal": "handi_bubble",
-		"kadai.paneer": "kadai_sizzle", "kadai.chole": "handi_bubble"}
+## Per-station effects come from the pack (Idle Business Kit phase 3): the
+## station's economy entry "fx" =
+##   cook_sound   sound when a ticket starts (if the station is on screen)
+##   dish_sounds  {dish: sound}, looked up first (station menus §9)
+##   cook_pose    the cook's pose while a timer runs (default "serve")
+##   steam_local  [x, y, z] station-local steam point; the station steams
+##                only when it has one (a glb steam_socket wins over it)
+##   parts        {spin, stir, heap, lid: glb node name} animated while cooking
+##   board_text   painted-board lines (below)
+##   fires        night fire glows (DayNight)
 ## Unlock props (station menus §7.4): scale and pop timing.
 const PROP_SCALE := Vector3(0.14, 0.14, 0.14)
 const PROP_POP_DELAY := 0.4
@@ -159,10 +162,8 @@ const PROP_POP := 0.35
 ## with it. Polish round 3 (2026-10-21, QA: in extreme close-up the marigold
 ## string along the board's top edge sat on the top bar of "लस्सी"): both
 ## words 3.5 / 1 cm lower (were y 0.645 / 0.415).
-const BOARD_TEXT := {"lassi": [
-	["लस्सी", Vector3(-0.56, 0.61, -1.536), 0.66, 0.2, Color(0.1, 0.27, 0.62)],
-	["LASSI", Vector3(-0.56, 0.405, -1.536), 0.62, 0.15, Color(0.78, 0.13, 0.1)],
-]}
+## Lines: [text, [x, y, z] prop-local centre, max width, cap height, [r, g, b]]
+## in the station's fx.board_text.
 const BOARD_FONT_SIZE := 96
 ## Cap height / em of the project font (Baloo 2; = Main3.SIGN_CAP_EM).
 const BOARD_CAP_EM := 0.68
@@ -199,8 +200,16 @@ var held_max: int = 0
 ## Ticket -> the Tween sliding its item (stool -> pass, or closing up on the
 ## stool): killed when a waiter lifts the item, so it never drifts on his tray.
 var _slide_tw: Dictionary = {}
-## Cook pose while a timer runs (C8.1: the tandoor cook slaps rotis).
-const COOK_POSE := {"tandoor": "slap"}
+## The station's "fx" block from the pack ({} when none).
+func _fx() -> Dictionary:
+	var f: Variant = Game.station_def(id).get("fx", {})
+	return f if f is Dictionary else {}
+
+
+static func _v3(a: Variant, fallback: Vector3 = Vector3.ZERO) -> Vector3:
+	if a is Array and (a as Array).size() >= 3:
+		return Vector3(float(a[0]), float(a[1]), float(a[2]))
+	return fallback
 
 
 ## Area3D tap target with meta tap_id (WorldInput raycasts these).
@@ -295,10 +304,11 @@ func setup(p_id: String, p_sim: Sim = null) -> void:
 ## BOARD_TEXT lines as Label3Ds on the prop (only over the real glb: the
 ## fallback box has no board).
 func _add_board_text() -> void:
-	if not BOARD_TEXT.has(id) or not Models.exists(Layout3.station_model(id)):
+	var lines: Variant = _fx().get("board_text", [])
+	if not (lines is Array) or (lines as Array).is_empty() or not Models.exists(Layout3.station_model(id)):
 		return
 	var font: Font = load("res://ui/main_font.tres") as Font
-	for v in BOARD_TEXT[id]:
+	for v in lines:
 		var e: Array = v
 		var text: String = e[0]
 		var l := Label3D.new()
@@ -316,9 +326,10 @@ func _add_board_text() -> void:
 				px = minf(px, float(e[2]) / w)
 		l.pixel_size = px
 		l.outline_size = 12
-		l.modulate = e[4]
+		var col: Array = e[4]
+		l.modulate = Color(float(col[0]), float(col[1]), float(col[2]))
 		l.outline_modulate = Color(1.0, 0.97, 0.88)
-		l.position = e[1]
+		l.position = _v3(e[1])
 		l.shaded = false
 		l.double_sided = false
 		l.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -602,7 +613,7 @@ func _start(s: Slot) -> void:
 		s.timer.set_progress(0.0)
 		s.timer.pause(Game.sim_paused)
 	if s.staff != null:
-		s.staff.serve(true, str(COOK_POSE.get(id, "serve")))
+		s.staff.serve(true, str(_fx().get("cook_pose", "serve")))
 	var t: Traveller = s.ticket.traveller if s.ticket != null else null
 	_cook_sound(s.ticket.dish_id if s.ticket != null else "")
 	ticket_started.emit(self, s.ticket)
@@ -612,14 +623,19 @@ func _start(s: Slot) -> void:
 ## churn / egg_crack / handi_bubble / kadai_sizzle when a menu-expansion cook
 ## starts a ticket and the station is on screen (per dish, then per station).
 func _cook_sound(dish_id: String = "") -> void:
-	var key: String = dish_id if dish_id != "" and COOK_SOUND.has(dish_id) else id
-	if not COOK_SOUND.has(key):
+	var fx: Dictionary = _fx()
+	var snd: String = str(fx.get("cook_sound", ""))
+	var dish: String = dish_id.get_slice(".", 1) if dish_id.contains(".") else dish_id
+	var by_dish: Variant = fx.get("dish_sounds", {})
+	if dish != "" and by_dish is Dictionary and (by_dish as Dictionary).has(dish):
+		snd = str((by_dish as Dictionary)[dish])
+	if snd == "":
 		return
 	var cam: Node = Refs.camera
 	if cam == null or not cam.has_method("is_on_screen"):
 		return
 	if bool(cam.call("is_on_screen", Layout3.station_pos(id) + Vector3(0.0, 0.8, 0.0), 40.0)):
-		Sfx.play(str(COOK_SOUND[key]))
+		Sfx.play(snd)
 
 
 func _process(delta: float) -> void:
@@ -916,29 +932,37 @@ static func _make_stool() -> Node3D:
 
 
 # ================================================================ prop animator + steam
+## The glb node the station's fx.parts names for `role`, or null.
+func _part(parts: Dictionary, role: String) -> Node3D:
+	var n: String = str(parts.get(role, ""))
+	return prop.find_child(n, true, false) as Node3D if n != "" else null
+
+
 ## Caches the glb's animated parts (menu expansion §13.1 node names) and
 ## builds the steam pool (bhurji, dal). Missing parts are simply skipped.
 func _setup_animator() -> void:
 	_at_rest = false
 	if prop == null:
 		return
-	_madhani = prop.find_child("madhani", true, false) as Node3D
+	var fx: Dictionary = _fx()
+	var parts: Dictionary = fx.get("parts", {}) if fx.get("parts", {}) is Dictionary else {}
+	_madhani = _part(parts, "spin")
 	if _madhani != null:
 		_madhani_rest = _madhani.rotation.y
-	_heap = prop.find_child("bhurji", true, false) as Node3D
+	_heap = _part(parts, "heap")
 	if _heap != null:
 		_heap_rest_rot = _heap.rotation.y
 		_heap_rest_scale = _heap.scale
-	_lid = prop.find_child("handi_lid", true, false) as Node3D
+	_lid = _part(parts, "lid")
 	if _lid != null:
 		_lid_rest = _lid.rotation.x
-	_karchhi = prop.find_child("karchhi", true, false) as Node3D
+	_karchhi = _part(parts, "stir")
 	if _karchhi != null:
 		_karchhi_rest = _karchhi.rotation
-	if not STEAM_LOCAL.has(id):
+	if not fx.has("steam_local"):
 		return
 	_steam_at = prop.find_child("steam_socket", true, false) as Node3D
-	_steam_local = STEAM_LOCAL[id]
+	_steam_local = _v3(fx["steam_local"])
 	_steam_col = Color(1.0, 0.97, 0.92)
 	var quad := QuadMesh.new()
 	quad.size = Vector2(1.0, 1.0)

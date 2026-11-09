@@ -31,6 +31,13 @@
     "lassi",
     "kadai"
   ],
+  "legacy": {
+    "_comment": "Idle Business Kit phase 3: the dhaba's old-save migrations (bhurji / dal -> kadai, docs/v3-station-menus.md \u00a76), moved out of the engine. merge_into receives the retired stations' level, cooks and speed.",
+    "stations": {"bhurji": "kadai", "dal": "kadai"},
+    "merge_into": "kadai",
+    "task_ids": {"build_bhurji": "build_kadai", "bhurji_serve30": "kadai_serve30", "bhurji_l25": "kadai_l25", "bhurji_hire2": "kadai_hire2",
+                 "build_dal": "build_kadai", "dal_serve30": "kadai_serve30", "dal_l25": "kadai_l25", "dal_hire2": "kadai_hire2"}
+  },
   "stations": {
     "chai": {
       "name": "CHAI COUNTER",
@@ -63,6 +70,14 @@
       "serve_text": "Pour {n} cups of chai for travellers",
       "build_text": "Build the {station}",
       "menu_group": "drink",
+      "_kit_comment": "Idle Business Kit phase 3 (9 Nov): what the engine used to know about this counter by its id. role core = the first service point (always built, the tutorial starts here).",
+      "role": "core",
+      "short_name": "CHAI",
+      "unit": "cup",
+      "units": "cups",
+      "ui": {"icon": "kettle", "menu_icon": "kettle", "doodles": ["kettle", "kulhad", "steam", "leaf"],
+        "info": "LEVEL UP raises the price of every cup. STAFF and SPEED pour for more travellers. New dishes join the menu at L25, L50 and L100."},
+      "fx": {"cook_sound": "chai_pour", "fires": [[[-0.86, 0.80, 0.24], 0.34, 1.5]]},
       "order_weight": 1.0,
       "menu": [
         {
@@ -153,6 +168,14 @@
       "serve_text": "Bake {n} rotis in the tandoor",
       "build_text": "Build the tandoor",
       "menu_group": "dish",
+      "_kit_comment": "role first_build = the counter the tutorial builds (behind its lock until then).",
+      "role": "first_build",
+      "short_name": "TANDOOR",
+      "unit": "roti",
+      "units": "rotis",
+      "ui": {"icon": "roti", "menu_icon": "tandoor", "doodles": ["roti", "tandoor", "flame"],
+        "info": "LEVEL UP raises the price of every roti. STAFF and SPEED feed more drivers. New dishes join the menu at L25, L50 and L100."},
+      "fx": {"cook_sound": "tandoor_slap", "cook_pose": "slap", "fires": [[[-0.5, 1.12, -0.05], 0.45, 1.7]]},
       "order_weight": 1.0,
       "menu": [
         {
@@ -224,6 +247,17 @@
       "requires_waiters": 2,
       "build_desc": "Thick, chilled lassi from a clay pot, with a layer of cream on top.",
       "menu_group": "drink",
+      "_kit_comment": "role first_pad = the first counter built from a ghost pad in free play (its pad switches the free-play tap boxes on); next_chip_skip = never the NEXT chip's interim goal.",
+      "role": "first_pad",
+      "short_name": "LASSI",
+      "unit": "glass",
+      "units": "glasses",
+      "next_chip_skip": true,
+      "ui": {"icon": "lassi", "menu_icon": "lassi", "doodles": ["matka", "glass", "churner", "leaf"],
+        "info": "LEVEL UP raises the price of every glass. STAFF and SPEED churn for more travellers. New dishes join the menu at L25, L50 and L100."},
+      "fx": {"cook_sound": "churn", "parts": {"spin": "madhani"},
+        "board_text": [["\u0932\u0938\u094d\u0938\u0940", [-0.56, 0.61, -1.536], 0.66, 0.2, [0.1, 0.27, 0.62]],
+                       ["LASSI", [-0.56, 0.405, -1.536], 0.62, 0.15, [0.78, 0.13, 0.1]]]},
       "order_weight": 1.25,
       "price_base": 5.0,
       "price_step": 0.1,
@@ -311,6 +345,16 @@
       "requires_waiters": 3,
       "build_desc": "A big iron kadai in the back kitchen. Egg bhurji first, then dal, paneer and chole.",
       "menu_group": "dish",
+      "_kit_comment": "role reveal_stats = building it brings STATS to the HUD and opens the signboard.",
+      "role": "reveal_stats",
+      "short_name": "KADAI",
+      "unit": "plate",
+      "units": "plates",
+      "ui": {"icon": "kadai", "menu_icon": "kadai", "doodles": ["kadai", "karchhi", "flame", "steam"],
+        "info": "LEVEL UP raises the price of every plate. STAFF and SPEED cook for more drivers. New dishes join the menu at L25, L50 and L100."},
+      "fx": {"dish_sounds": {"bhurji": "egg_crack", "dal": "handi_bubble", "paneer": "kadai_sizzle", "chole": "handi_bubble"},
+        "steam_local": [-0.22, 1.05, -0.02], "parts": {"stir": "karchhi", "heap": "bhurji", "lid": "handi_lid"},
+        "fires": [[[-0.22, 0.16, 0.30], 0.32, 1.5]]},
       "order_weight": 1.25,
       "price_base": 15.0,
       "price_step": 0.3,
@@ -401,7 +445,7 @@
     "_builds_comment": "Step 3 (6 Nov): the next stage is bought (cost x the difficulty dial) when its requires are met and built over dur_s on the wall clock while the old place trades (a rewarded ad finishes it). The renovation and the highway move take dur_s too. Placeholder prices until the pacing pass (plan step 5).",
     "builds": {
       "_prices_comment": "Step 5 (7 Nov): the shack costs what the chai lesson leaves the tutorial player (76.61, so no top-up); the dhaba 450 (owner: a 5-minute build) is bought about 7.5 min after the tutorial with ads (9 without), opens about 12.5 (14), kadai about 16 (19) (pacing_v3.py --growth).",
-      "shack": {"cost": 75, "dur_s": 180, "requires": {"chai_level": 10}},
+      "shack": {"cost": 75, "dur_s": 180, "requires": {"core_level": 10}},
       "dhaba": {"cost": 450, "dur_s": 300, "requires": {"built": "lassi", "tables": 3}},
       "renovation": {"dur_s": 1200},
       "move": {"dur_s": 1800}
@@ -409,8 +453,8 @@
     "stages": [
       {"id": "cart", "tables_max": 2, "gallas_max": 1, "waiters_max": 1, "waiter_names": ["Chhotu"],
        "_cart_comment": "9 Nov (owner: a chai stall has no server and cashier): the cart's waiter is Chhotu (his own model) and the bill is paid at the cart's cash table with no cashier (Layout3.is_cart_galla)."},
-      {"id": "shack", "tables_max": 3, "gallas_max": 2, "waiters_max": 2},
-      {"id": "dhaba"}
+      {"id": "shack", "title": "THE SHACK", "tables_max": 3, "gallas_max": 2, "waiters_max": 2},
+      {"id": "dhaba", "title": "THE DHABA"}
     ]
   },
   "galla": {

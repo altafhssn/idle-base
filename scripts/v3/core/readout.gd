@@ -378,7 +378,7 @@ func _fix_for(stage: String, station: String) -> Dictionary:
 func _road_fix(thr: float) -> Dictionary:
 	var offer_v: Variant = _gcall("signboard_offer", [], {"offer": false})
 	var offer: Dictionary = offer_v if offer_v is Dictionary else {}
-	var open: bool = bool(_gcall("signboard_unlocked", [], game.is_built("kadai")))
+	var open: bool = bool(_gcall("signboard_unlocked", [], false))
 	if bool(offer.get("offer", false)) and open:
 		var cost: float = float(offer.get("cost", _gcall("signboard_cost", [], 0.0)))
 		return _fix("signboard", "", "", -1, cost, str(FIX_LABELS["signboard"]), "road")

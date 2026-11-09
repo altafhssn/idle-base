@@ -325,14 +325,14 @@ var _interim_sid: String = ""
 var _interim_target: int = 0
 
 
-## Counters the chip always saves for: the tutorial's last line (l17) names
-## the lassi as the next goal, so the chip agrees with Munshi-ji.
-const INTERIM_SKIP := ["lassi"]
+## Counters the chip always saves for (economy station "next_chip_skip"):
+## the tutorial's last line (l17) names the dhaba's lassi as the next goal,
+## so the chip agrees with Munshi-ji.
 
 
 ## The counter `nb` costs more than SAVE_MINUTES of takings.
 func _build_far(nb: String) -> bool:
-	if INTERIM_SKIP.has(nb):
+	if bool(Game.station_def(nb).get("next_chip_skip", false)):
 		return false
 	var rate: float = Game.rate_per_min()
 	return rate > 0.0 and Game.build_cost(nb) > SAVE_MINUTES * rate
@@ -417,7 +417,6 @@ func _milestone_hint(sid: String, target: int) -> Dictionary:
 const ENDLESS_HOLD := 15.0
 ## Short counter names for the chip's 25 px line ("CHAI", not "CHAI
 ## COUNTER"); each is already a msgid (the station / first dish name).
-const SHORT_NAME := {"chai": "CHAI", "tandoor": "TANDOOR", "lassi": "LASSI", "kadai": "KADAI"}
 
 var _endless_kind: String = ""
 var _endless_t0: float = -999.0
@@ -624,9 +623,11 @@ func _level_line(sid: String, lv: int, target_lv: int) -> String:
 			"target": Fmt.count(target_lv)})
 
 
-## "CHAI" / "चाय" (the full station name for a counter not in SHORT_NAME).
+## The station's "short_name" from the pack ("CHAI"), translated; the full
+## station name when it has none.
 func _short(sid: String) -> String:
-	return tr(str(SHORT_NAME[sid])) if SHORT_NAME.has(sid) else UiKit.station_name(sid)
+	var sn: String = str(Game.station_def(sid).get("short_name", ""))
+	return tr(sn) if sn != "" else UiKit.station_name(sid)
 
 
 ## A goal not affordable yet: "Save 900 / 1,800" with the progress bar.
