@@ -34,6 +34,24 @@ extends Node
 ## Sounds come from the theme pack (ThemePack.audio_dir()), then the kit's
 ## own (ThemePack.ENGINE_DIR + "audio/").
 static var DIR: String = ThemePack.audio_dir()
+## The pack's sound table (audio/sounds.json: volume_db, pitched_db,
+## pitch_jitter_max, cooldown, bus, variants, horn_ids). Idle Business Kit
+## phase 3: these per-file numbers belong to the pack's sounds, so they live
+## beside them; the engine keeps only behaviour (buses, ducking, covers).
+static var _sounds_json: Dictionary = {}
+static var _sounds_loaded: bool = false
+
+
+static func _table(key: String, fallback: Variant) -> Variant:
+	if not _sounds_loaded:
+		_sounds_loaded = true
+		var f := FileAccess.open(ThemePack.audio_dir() + "sounds.json", FileAccess.READ)
+		if f != null:
+			var v: Variant = JSON.parse_string(f.get_as_text())
+			if v is Dictionary:
+				_sounds_json = v
+	var t: Variant = _sounds_json.get(key, fallback)
+	return t if typeof(t) == typeof(fallback) else fallback
 const SETTINGS_PATH := "user://settings.json"
 const POOL := 10
 
@@ -41,75 +59,32 @@ const POOL := 10
 ## inside each bus.
 const BUS_DB := {"Music": 3.0, "SFX": 3.0, "UI": 3.0}
 ## Bus of each sound id (base id; variants follow it). Anything else: SFX.
-const BUS_OF := {"tap": "UI", "button_thunk": "UI", "deny": "UI", "typewriter": "UI", "marker_pop": "UI",
-	"reward_count": "UI", "claim": "UI", "build_done": "UI", "menu_unlock": "UI", "ready": "UI", "upgrade": "UI",
-	# core-and-feel world sounds (2026-11-01): the night TV, the baraat bus, the sitting dog
-	"tv_cheer": "SFX", "baraat_band": "SFX", "dog_bark": "SFX",
-	# art audit UA2 (4 Nov): a hire and a table get their own sounds
-	"hire": "UI", "table_knock": "UI",
-	# story (4 Nov): a message from Simran
-	"phone_buzz": "UI"}
+static var BUS_OF: Dictionary = _table("bus", {})
 
 ## Minimum seconds between two plays of the same sound (stops coin spam).
-const COOLDOWN := {"serve": 0.1, "horn": 2.5, "tap": 0.05, "angry": 0.5,
-	"bill_whoosh": 0.12, "sale_chime": 0.08, "typewriter": 0.05, "button_thunk": 0.04,
-	"reward_count": 0.03, "build_done": 0.5, "marker_pop": 0.2, "claim": 0.3,
-	"churn": 1.2, "egg_crack": 1.2, "handi_bubble": 1.5, "chai_pour": 1.5, "tandoor_slap": 1.2,
-	"menu_unlock": 0.5, "kadai_sizzle": 1.2, "upgrade": 0.08, "ready": 0.3,
-	"tv_cheer": 30.0, "baraat_band": 20.0, "dog_bark": 20.0, "hire": 0.3, "table_knock": 0.3, "phone_buzz": 2.0}
+static var COOLDOWN: Dictionary = _table("cooldown", {})
 ## Feel track: "button_thunk" is skipped this soon after one of COVERS
 ## (play() / play_pitched() keys).
 const COVERS := ["upgrade", "upgrade_p"]
 const COVER_S := 0.05
 ## The four vehicle horns (Traffic picks one by vehicle): one cooldown, the
 ## "horn" one, for all of them.
-const HORN_IDS := ["horn", "horn_truck", "horn_auto", "bike"]
+static var HORN_IDS: Array = _table("horn_ids", [])
 
 ## Per-file volume (dB) for play(); a variant without its own entry uses its
 ## base id's. Set from tools/audio/measure.py so each sound lands at its
 ## target loudness (docs/polish/audio.md, "The mix").
-const VOLUME_DB := {
-	# core loop (world)
-	"sale_chime": -6.8, "sale_chime_2": -7.0, "sale_chime_3": -6.5,
-	"bill_whoosh": -9.8, "bill_whoosh_2": -10.0,
-	"serve": -4.2, "serve_2": -3.5, "serve_3": -2.7,
-	"pop": -1.1,
-	# traffic (one per vehicle horn, see HORN_IDS)
-	"horn": -10.3, "horn_truck": -10.1, "horn_auto": -12.6, "bike": -13.7,
-	# stations (a cook starts an order, station on screen)
-	"chai_pour": -12.5, "tandoor_slap": -5.0, "churn": -11.0, "kadai_sizzle": -6.2,
-	"egg_crack": -2.6, "handi_bubble": -10.5,
-	# UI
-	"tap": -3.1, "button_thunk": -1.2, "typewriter": -6.0, "marker_pop": -4.4, "deny": -4.9,
-	# rewards
-	"claim": -2.7, "build_done": -0.8, "menu_unlock": -3.0, "ready": -2.9, "upgrade": -2.9,
-	# art audit UA2 (4 Nov): levels set by ear-free estimate, to be measured with tools/audio/measure.py
-	"hire": -3.0, "table_knock": -2.0,
-	# story (4 Nov): estimate, to be measured with tools/audio/measure.py
-	"phone_buzz": -4.0,
-	# hooks for other tracks (generated, not played yet)
-	"angry": -13.9,
-	# core-and-feel world sounds (measure.py LUFS-M max -17.4 / -11.5 / -17.1; targets in game
-	# -30 quiet distant TV, -19 band arriving, -24 a dog down the road)
-	"tv_cheer": -15.6, "baraat_band": -10.5, "dog_bark": -9.9,
-	# beds
-	"music_loop": -14.1, "amb_day": -21.7, "amb_night": -19.4}
+static var VOLUME_DB: Dictionary = _table("volume_db", {})
 ## Volume (dB) for play_pitched() (waiter pickups, the deny buzz, reward
 ## count-up ticks, the LEVEL UP knock with its rising pitch). Ids not
 ## listed: -4 dB.
-const PITCHED_DB := {"pop": -5.0, "deny": -4.9, "reward_count": -7.0, "upgrade": -6.0}
+static var PITCHED_DB: Dictionary = _table("pitched_db", {})
 ## Largest random pitch change per id (callers ask for up to +-6 %): tonal
 ## sounds stay in tune with the music (key of D).
-const PITCH_JITTER_MAX := {"sale_chime": 0.012, "serve": 0.025, "claim": 0.0, "build_done": 0.0,
-	"menu_unlock": 0.0, "ready": 0.01, "marker_pop": 0.015, "upgrade": 0.012, "horn": 0.03,
-	"horn_truck": 0.03, "horn_auto": 0.03, "bike": 0.03,
-	"reward_count": 0.0, "baraat_band": 0.0, "hire": 0.0, "table_knock": 0.0, "phone_buzz": 0.0}
+static var PITCH_JITTER_MAX: Dictionary = _table("pitch_jitter_max", {})
 ## Variants per id: [file id, weight]. (The horns are not variants any more:
 ## Traffic picks the vehicle's own horn, see HORN_IDS.)
-const VARIANTS := {
-	"sale_chime": [["sale_chime", 1.0], ["sale_chime_2", 1.0], ["sale_chime_3", 1.0]],
-	"bill_whoosh": [["bill_whoosh", 1.0], ["bill_whoosh_2", 1.0]],
-	"serve": [["serve", 1.0], ["serve_2", 1.0], ["serve_3", 1.0]]}
+static var VARIANTS: Dictionary = _table("variants", {})
 
 ## Music: fade in at boot, duck under Munshi-ji, quieter and darker at night.
 const MUSIC_FADE_IN := 2.5

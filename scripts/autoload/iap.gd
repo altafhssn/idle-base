@@ -41,15 +41,17 @@ const FAKE_SECONDS := 0.5
 ## offers.gd). Every purchase, restore and old buyer is reported to
 ## Game.note_purchase() first, so no offer shows after any purchase.
 const STARTER := "starter_pack"
-## Placeholder store titles and prices; real ones come from the store at
-## runtime (Play Console: owner task). Remove Ads ₹149 is sold as "No forced
-## ads, now or later" (it removes every interstitial; bonus videos stay).
-const PRODUCTS := {
-	"vip_x2": {"title": "VIP: ×2 dhaba income", "price": "₹299", "consumable": false},
-	"remove_ads": {"title": "No Ads", "price": "₹149", "consumable": false},
-	"sikke_small": {"title": "Pouch of Sikke", "price": "₹89", "consumable": true, "sikke": 80},
-	"starter_pack": {"title": "Starter Pack", "price": "₹49", "consumable": false},
-}
+## Placeholder store titles and prices from the theme pack (theme.json
+## store.products); real ones come from the store at runtime (Play Console:
+## owner task). The dhaba's Remove Ads is sold as "No forced ads, now or
+## later" (it removes every interstitial; bonus videos stay).
+static var PRODUCTS: Dictionary = _products()
+
+
+static func _products() -> Dictionary:
+	var st: Variant = ThemePack.config().get("store", {})
+	var p: Variant = (st as Dictionary).get("products", {}) if st is Dictionary else {}
+	return p if p is Dictionary else {}
 
 const Config := preload("res://scripts/v3/monetization/monetization_config.gd")
 const BaseBackend := preload("res://scripts/v3/monetization/store_backend_base.gd")

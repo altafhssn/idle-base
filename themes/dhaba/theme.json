@@ -20,5 +20,36 @@
     "seat_set": "TABLE",
     "customer": "TRAVELLER",
     "currency": "₹"
+  },
+  "money": {
+    "_comment": "symbol before money amounts; number_style auto = lakh/crore grouping on Indian device locales (the player can switch it in Settings), indian / intl = always that style.",
+    "symbol": "₹",
+    "number_style": "auto"
+  },
+  "store": {
+    "_comment": "In-app products: placeholder titles and prices (the real ones come from the store at run time). Ids are the engine's; the store console must use the same ids.",
+    "products": {
+      "vip_x2": {
+        "title": "VIP: ×2 dhaba income",
+        "price": "₹299",
+        "consumable": false
+      },
+      "remove_ads": {
+        "title": "No Ads",
+        "price": "₹149",
+        "consumable": false
+      },
+      "sikke_small": {
+        "title": "Pouch of Sikke",
+        "price": "₹89",
+        "consumable": true,
+        "sikke": 80
+      },
+      "starter_pack": {
+        "title": "Starter Pack",
+        "price": "₹49",
+        "consumable": false
+      }
+    }
   }
 }

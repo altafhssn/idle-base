@@ -1976,8 +1976,10 @@ func _check_funnel() -> void:
 
 
 # ================================================================ galla
+## The checkout's economy section: "checkout" in a kit pack, "galla" in the
+## dhaba's (the engine's internal name for the checkout is "galla").
 func _gdef() -> Dictionary:
-	return _dict(eco, "galla")
+	return _dict(eco, "checkout") if eco.has("checkout") else _dict(eco, "galla")
 
 
 func galla_count() -> int:
@@ -4862,9 +4864,15 @@ func number_format() -> String:
 	return num_format
 
 
-## D6: lakh / crore numbers? "indian" yes, "intl" no, "auto" = the device locale.
+## D6: lakh / crore numbers? "indian" yes, "intl" no, "auto" = the pack's
+## money.number_style ("auto" there = the device locale).
 func indian_numbers() -> bool:
 	match num_format:
+		"indian":
+			return true
+		"intl":
+			return false
+	match str(ThemePack.money().get("number_style", "intl")):
 		"indian":
 			return true
 		"intl":

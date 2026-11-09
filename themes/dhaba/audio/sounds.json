@@ -1,0 +1,163 @@
+{
+  "_comment": "Idle Business Kit phase 3, step 2: the dhaba's sound table (was in scripts/autoload/sfx.gd). volume_db per file id (measured with tools/audio/measure.py), pitched_db for play_pitched, pitch_jitter_max, cooldown (s between plays), bus (UI / SFX / Music; default SFX), variants ([file id, weight]), horn_ids (share the 'horn' cooldown). Every id in volume_db must have a file in this folder (the pack checker checks it).",
+  "volume_db": {
+    "sale_chime": -6.8,
+    "sale_chime_2": -7.0,
+    "sale_chime_3": -6.5,
+    "bill_whoosh": -9.8,
+    "bill_whoosh_2": -10.0,
+    "serve": -4.2,
+    "serve_2": -3.5,
+    "serve_3": -2.7,
+    "pop": -1.1,
+    "horn": -10.3,
+    "horn_truck": -10.1,
+    "horn_auto": -12.6,
+    "bike": -13.7,
+    "chai_pour": -12.5,
+    "tandoor_slap": -5.0,
+    "churn": -11.0,
+    "kadai_sizzle": -6.2,
+    "egg_crack": -2.6,
+    "handi_bubble": -10.5,
+    "tap": -3.1,
+    "button_thunk": -1.2,
+    "typewriter": -6.0,
+    "marker_pop": -4.4,
+    "deny": -4.9,
+    "claim": -2.7,
+    "build_done": -0.8,
+    "menu_unlock": -3.0,
+    "ready": -2.9,
+    "upgrade": -2.9,
+    "hire": -3.0,
+    "table_knock": -2.0,
+    "phone_buzz": -4.0,
+    "angry": -13.9,
+    "tv_cheer": -15.6,
+    "baraat_band": -10.5,
+    "dog_bark": -9.9,
+    "music_loop": -14.1,
+    "amb_day": -21.7,
+    "amb_night": -19.4
+  },
+  "pitched_db": {
+    "pop": -5.0,
+    "deny": -4.9,
+    "reward_count": -7.0,
+    "upgrade": -6.0
+  },
+  "pitch_jitter_max": {
+    "sale_chime": 0.012,
+    "serve": 0.025,
+    "claim": 0.0,
+    "build_done": 0.0,
+    "menu_unlock": 0.0,
+    "ready": 0.01,
+    "marker_pop": 0.015,
+    "upgrade": 0.012,
+    "horn": 0.03,
+    "horn_truck": 0.03,
+    "horn_auto": 0.03,
+    "bike": 0.03,
+    "reward_count": 0.0,
+    "baraat_band": 0.0,
+    "hire": 0.0,
+    "table_knock": 0.0,
+    "phone_buzz": 0.0
+  },
+  "cooldown": {
+    "serve": 0.1,
+    "horn": 2.5,
+    "tap": 0.05,
+    "angry": 0.5,
+    "bill_whoosh": 0.12,
+    "sale_chime": 0.08,
+    "typewriter": 0.05,
+    "button_thunk": 0.04,
+    "reward_count": 0.03,
+    "build_done": 0.5,
+    "marker_pop": 0.2,
+    "claim": 0.3,
+    "churn": 1.2,
+    "egg_crack": 1.2,
+    "handi_bubble": 1.5,
+    "chai_pour": 1.5,
+    "tandoor_slap": 1.2,
+    "menu_unlock": 0.5,
+    "kadai_sizzle": 1.2,
+    "upgrade": 0.08,
+    "ready": 0.3,
+    "tv_cheer": 30.0,
+    "baraat_band": 20.0,
+    "dog_bark": 20.0,
+    "hire": 0.3,
+    "table_knock": 0.3,
+    "phone_buzz": 2.0
+  },
+  "bus": {
+    "tap": "UI",
+    "button_thunk": "UI",
+    "deny": "UI",
+    "typewriter": "UI",
+    "marker_pop": "UI",
+    "reward_count": "UI",
+    "claim": "UI",
+    "build_done": "UI",
+    "menu_unlock": "UI",
+    "ready": "UI",
+    "upgrade": "UI",
+    "tv_cheer": "SFX",
+    "baraat_band": "SFX",
+    "dog_bark": "SFX",
+    "hire": "UI",
+    "table_knock": "UI",
+    "phone_buzz": "UI"
+  },
+  "variants": {
+    "sale_chime": [
+      [
+        "sale_chime",
+        1.0
+      ],
+      [
+        "sale_chime_2",
+        1.0
+      ],
+      [
+        "sale_chime_3",
+        1.0
+      ]
+    ],
+    "bill_whoosh": [
+      [
+        "bill_whoosh",
+        1.0
+      ],
+      [
+        "bill_whoosh_2",
+        1.0
+      ]
+    ],
+    "serve": [
+      [
+        "serve",
+        1.0
+      ],
+      [
+        "serve_2",
+        1.0
+      ],
+      [
+        "serve_3",
+        1.0
+      ]
+    ]
+  },
+  "horn_ids": [
+    "horn",
+    "horn_truck",
+    "horn_auto",
+    "bike"
+  ]
+}

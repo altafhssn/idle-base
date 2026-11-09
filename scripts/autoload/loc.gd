@@ -38,6 +38,8 @@ var lang: String = "en"
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Idle Business Kit: the theme pack's own wording (text/<locale>.json).
+	ThemePack.install_text()
 	var code: String = saved_language()
 	if code == "":
 		code = device_language()

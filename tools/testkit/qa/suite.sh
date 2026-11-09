@@ -9,7 +9,7 @@ SLOT="$1"; TAG="$2"; MODE="${3:-full}"
 L="$Q/logs/$TAG"; mkdir -p "$L"
 "$Q/savecheck.sh" || exit 1
 # drop this suite's own results from an earlier run with the same TAG (other logs in $L are kept)
-rm -f "$L"/tut_en_s[0-9].log "$L"/tut_hi_s1.log "$L"/tapcheck.log "$L"/zoomtest.log "$L"/sdktest.log "$L"/packcheck.log \
+rm -f "$L"/tut_en_s[0-9].log "$L"/tut_hi_s1.log "$L"/tapcheck.log "$L"/zoomtest.log "$L"/sdktest.log "$L"/packcheck.log "$L"/themewords.log \
   "$L"/tutcheck.txt "$L"/summary.txt "$L"/savecheck.txt
 SEEDS="1 2 3 4"; [ "$MODE" = quick ] && SEEDS="1 2"
 # each job gets its own slot copy so saves never collide
@@ -31,6 +31,11 @@ for j in "${jobs_list[@]}"; do
 done
 wait
 "$Q/savecheck.sh" > "$L/savecheck.txt" 2>&1
+# Idle Business Kit: no engine file may gain theme words (tools/kit/theme_words.py)
+TW="$Q/slots/$SLOT/proj/tools/kit/theme_words.py"
+if [ -f "$TW" ]; then
+  python3 -I "$TW" --root "$Q/slots/$SLOT/proj" --check > "$L/themewords.log" 2>&1; echo "rc=$?" >> "$L/themewords.log"
+fi
 python3 -I "$Q/tutcheck.py" "$L" --base "$Q/logs/baseline" --prev "${PREV_BASE:-$Q/logs/baseline}" \
   --allow-move "${ALLOW_MOVE:-}" > "$L/tutcheck.txt" 2>&1
 python3 -I "$Q/parse.py" "$L" | tee "$L/summary.txt"

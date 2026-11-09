@@ -34,8 +34,10 @@ extends RefCounted
 ## "से॰", minutes "मिनट" ("12.0/मिनट"), level "लेवल 25". Digits stay 0-9 and
 ## the intl suffixes (K, M, B ...) stay Latin.
 
-const MONEY_DISPLAY_SCALE := 10.0
-const RUPEE := "₹"
+## Idle Business Kit: the scale is the pack economy's money_display_scale and
+## the sign the pack's money.symbol (the dhaba: x10, "₹").
+static var MONEY_DISPLAY_SCALE: float = ThemePack.money_display_scale()
+static var CURRENCY: String = str(ThemePack.money().get("symbol", "$"))
 const INT_FROM := 1000.0        # displayed values at/above this drop their decimals
 const BIG_FROM := 100000.0      # 1 lakh / 100K: switch to suffixes
 ## intl suffixes from 1e3 up (only used from BIG_FROM); beyond Qi: "1.23e21".
@@ -90,7 +92,7 @@ static func sale(v: float) -> String:
 
 ## Price with the rupee sign, for sentences ("Earn ₹1,000 for the dhaba").
 static func rupee(v: float) -> String:
-	return RUPEE + _money_rule(v * MONEY_DISPLAY_SCALE)
+	return CURRENCY + _money_rule(v * MONEY_DISPLAY_SCALE)
 
 
 ## Income stat (MAX INCOME): below 1,000 always 2 decimals ("544.28",

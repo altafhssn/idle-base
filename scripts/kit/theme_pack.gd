@@ -99,6 +99,26 @@ static func game() -> Dictionary:
 	return g if g is Dictionary else {}
 
 
+## The pack's money style (theme.json "money"): symbol (shown before
+## amounts) and number_style ("auto" = lakh / crore on Indian locales,
+## "indian", or "intl").
+static func money() -> Dictionary:
+	var m: Variant = config().get("money", {})
+	var out: Dictionary = {"symbol": "$", "number_style": "intl"}
+	if m is Dictionary:
+		out.merge(m, true)
+	return out
+
+
+## The economy's money_display_scale (stored reference units x this = shown).
+static func money_display_scale() -> float:
+	var f := FileAccess.open(economy_path(), FileAccess.READ)
+	var v: Variant = JSON.parse_string(f.get_as_text()) if f != null else null
+	if v is Dictionary:
+		return float((v as Dictionary).get("money_display_scale", 1.0))
+	return 1.0
+
+
 ## Whether a switchable system is on (theme.json "systems"; on when unset,
 ## so a pack written before a system existed keeps it).
 static func system_on(name: String) -> bool:
@@ -106,6 +126,44 @@ static func system_on(name: String) -> bool:
 	if s is Dictionary and (s as Dictionary).has(name):
 		return bool((s as Dictionary)[name])
 	return true
+
+
+## The pack's own wording (text/<locale>.json), installed as translations
+## so every on-screen string can be renamed by a pack without code: a car
+## wash renames "CASH COUNTER" to "PAY DESK" in text/en.json. Format:
+##   {"messages": {"<engine English>": "<pack text>"},
+##    "contexts": {"<context>": {"<engine English>": "<pack text>"}}}
+## Called once by Loc before the UI is built. Returns the messages installed.
+static func install_text() -> int:
+	var n: int = 0
+	var dir: String = file("text/")
+	for f in DirAccess.get_files_at(dir):
+		if not f.ends_with(".json"):
+			continue
+		var fa := FileAccess.open(dir + f, FileAccess.READ)
+		var v: Variant = JSON.parse_string(fa.get_as_text()) if fa != null else null
+		if not (v is Dictionary):
+			push_warning("ThemePack: %s%s is not a JSON object" % [dir, f])
+			continue
+		var t := Translation.new()
+		t.locale = f.get_basename()
+		var msgs: Variant = (v as Dictionary).get("messages", {})
+		if msgs is Dictionary:
+			for k in msgs:
+				t.add_message(str(k), str(msgs[k]))
+				n += 1
+		var ctxs: Variant = (v as Dictionary).get("contexts", {})
+		if ctxs is Dictionary:
+			for c in ctxs:
+				var cm: Variant = ctxs[c]
+				if cm is Dictionary:
+					for k in cm:
+						t.add_message(str(k), str(cm[k]), str(c))
+						n += 1
+		TranslationServer.add_translation(t)
+	if n > 0:
+		print("[pack] %d text lines from %s" % [n, dir])
+	return n
 
 
 ## Debug and tests: forget the cached choice (a test that switches packs).

@@ -12,13 +12,16 @@ extends RefCounted
 ##     station_order defined, the growth and event sections when those
 ##     systems are on.
 ##  3. models/: at least one model, and every .glb in it loads as a scene.
-##  4. audio/: every sound the engine knows (Sfx.VOLUME_DB) has a file in the
-##     pack or the kit.
+##  4. audio/: sounds.json reads; every sound in it and every sound a
+##     station's fx names has a file in the pack or the kit.
+##  5. text/: every <locale>.json reads (optional; the pack's own wording).
 ## Models the game asks for at run time but the pack lacks are caught while
 ## playing: Models prints "[pack] missing model '<id>'" and the suite fails.
 
 const SYSTEMS := ["story", "road", "growth", "events"]
 const WORDS := ["business", "service_point", "checkout", "server", "seat_set", "customer", "currency"]
+## "galla" may also be spelled "checkout" (the engine's internal name for
+## the checkout is galla).
 const ECONOMY_SECTIONS := ["start", "station_order", "stations", "galla", "waiters", "seating", "tasks", "offline"]
 
 var fails: int = 0
@@ -32,6 +35,7 @@ static func run() -> int:
 	c._economy()
 	c._models()
 	c._audio()
+	c._text()
 	print("PACKCHECK fails=%d (%d ok)" % [c.fails, c.oks])
 	return c.fails
 
@@ -103,8 +107,8 @@ func _economy() -> void:
 	_ok("economy.json reads (%d sections)" % e.size())
 	var missing: PackedStringArray = PackedStringArray()
 	for k in ECONOMY_SECTIONS:
-		if not e.has(k):
-			missing.append(k)
+		if not e.has(k) and not (k == "galla" and e.has("checkout")):
+			missing.append("checkout (or galla)" if k == "galla" else k)
 	if ThemePack.system_on("growth") and not e.has("growth"):
 		missing.append("growth (the growth system is on)")
 	if ThemePack.system_on("events") and not e.has("event"):
@@ -151,18 +155,50 @@ func _models() -> void:
 
 # ---------------------------------------------------------------- audio
 func _audio() -> void:
+	var table_path: String = ThemePack.audio_dir() + "sounds.json"
+	var tv: Variant = _json(table_path)
+	var vol: Dictionary = {}
+	if tv != null:
+		var v: Variant = (tv as Dictionary).get("volume_db", {})
+		vol = v if v is Dictionary else {}
+		_ok("audio/sounds.json reads (%d sounds)" % vol.size())
+	# every sound in the table, and every sound a station's fx names
+	var want: Dictionary = {}
+	for id in vol.keys():
+		want[str(id)] = "sounds.json"
+	for sid in Game.station_ids():
+		var fx: Variant = Game.station_def(sid).get("fx", {})
+		if not (fx is Dictionary):
+			continue
+		if str((fx as Dictionary).get("cook_sound", "")) != "":
+			want[str(fx["cook_sound"])] = "station " + sid
+		var ds: Variant = (fx as Dictionary).get("dish_sounds", {})
+		if ds is Dictionary:
+			for d in ds:
+				want[str(ds[d])] = "station " + sid
 	var missing: PackedStringArray = PackedStringArray()
-	var n: int = 0
-	for id in Sfx.VOLUME_DB.keys():
-		n += 1
+	for id in want.keys():
 		var found: bool = false
 		for dir in [ThemePack.audio_dir(), ThemePack.ENGINE_DIR + "audio/"]:
 			for ext in [".ogg", ".wav"]:
 				if ResourceLoader.exists(str(dir) + str(id) + ext):
 					found = true
 		if not found:
-			missing.append(str(id))
+			missing.append("%s (%s)" % [id, want[id]])
 	if missing.is_empty():
-		_ok("sounds: all %d known sounds present" % n)
+		_ok("sounds: all %d present" % want.size())
 	else:
-		_fail("sounds missing (%d of %d): %s" % [missing.size(), n, ", ".join(missing)])
+		_fail("sounds missing (%d of %d): %s" % [missing.size(), want.size(), ", ".join(missing)])
+
+
+# ---------------------------------------------------------------- text
+func _text() -> void:
+	var dir: String = ThemePack.file("text/")
+	var n: int = 0
+	for f in DirAccess.get_files_at(dir):
+		if f.ends_with(".json"):
+			n += 1
+			if _json(dir + f) != null:
+				_ok("text/%s reads" % f)
+	if n == 0:
+		_ok("text: none (the engine's English wording)")

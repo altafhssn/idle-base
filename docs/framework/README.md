@@ -16,7 +16,7 @@ staff, seats or bays, checkout, customers); the pack names and draws them.
 |---|---|---|
 | 1 | Template repo and test harness | Done (see below) |
 | 2 | Pack loader and checker | Done (see below) |
-| 3 | Names out of the code | In progress: step 1 of 5 done |
+| 3 | Names out of the code | Done (see below) |
 | 4 | Layouts from markers | Not started |
 | 5 | Switchable systems | Not started |
 | 6 | Tutorial and story as data | Not started |
@@ -87,10 +87,24 @@ Five steps, each tested and committed on its own:
    and `Game.station_with_role()` replace the names. The old-save migration (bhurji/dal -> kadai)
    is pack data (`legacy`); growth stage titles are `growth.stages[n].title`; a growth build's
    `core_level` replaces `chai_level` (still read for older packs).
-2. Sounds and words per pack.
-3. Money style per pack.
-4. The checkout ("galla") renamed in engine code.
-5. A word check in the suite.
+2. **Sounds and words per pack (done).** The per-file sound numbers (loudness, pitch,
+   cooldown, bus, variants, horns) moved from `Sfx` into the pack's `audio/sounds.json`; the
+   checker wants every sound in it and every sound a station's `fx` names. A pack renames any
+   on-screen English with `text/<locale>.json` (`{"messages": {"STAFF": "TEAM"}}`), installed
+   as translations by `ThemePack.install_text()`.
+3. **Money style per pack (done).** `theme.json` `money` = `symbol` and `number_style`
+   (`auto` = lakh/crore on Indian devices, `indian`, `intl`); the display scale is the
+   economy's `money_display_scale`; in-app products are `store.products`.
+4. **The checkout (decided: no code rename).** "galla" stays the engine's internal word for
+   the checkout: its ~600 uses mix code names, method and signal names called by string,
+   and save, analytics and tap ids that must not change, so a rename is risky and buys
+   nothing for pack authors, who never read engine code. A pack may name the economy section
+   `checkout` (or `galla`); what players read comes from the pack's words and text.
+5. **Theme-word ratchet (done).** `tools/kit/theme_words.py` counts the pack's own words
+   (station ids, staff names, the business word) in engine code per file; the suite's
+   `themewords` job fails if any file gains one. Baseline 702 (9 Nov), mostly in files later
+   phases own (main3 test drivers 184, layout 124, tutorial 113, dish art 69). Run `--write`
+   after a phase removes words to lower the bar.
 
 Layout (phase 4), the tutorial and story (phase 6) and the test drivers keep their dhaba names
 until their own phases.
