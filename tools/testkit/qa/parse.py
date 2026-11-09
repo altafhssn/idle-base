@@ -7,7 +7,8 @@ done / waiter_done / seats_lines / line7 with their delta against beats.json (de
 <this folder>/logs/baseline/beats.json).
 
 RESULT: FAIL when a job exits non-zero or prints SCRIPT ERROR; a tut_* log lacks `step -> done` or the
-quit line ending `(tutorial step: done)`; a conservation line has left_unpaid > 0; TAPCHECK / ZOOMTEST
+quit line ending `(tutorial step: done)`; a conservation line has left_unpaid > 0 or does not add up
+(arrived = paid + inside + left_unpaid); a "[check] STALL" line; TAPCHECK / ZOOMTEST
 report fails > 0 (or tapcheck.log / zoomtest.log lack the line); sdk-test prints a FAIL; tutcheck.txt
 (written by suite.sh) reports fails > 0 or has no `TUTCHECK fails=` line.
 """
@@ -73,6 +74,17 @@ for fn in sorted(os.listdir(d)):
         mm = re.search(r"left_unpaid (\d+)", c)
         if mm and int(mm.group(1)) > 0:
             job_bad.append("left_unpaid %s" % mm.group(1))
+        # Invariant (Idle Business Kit): every customer who came in paid, is
+        # still inside, or left unpaid - nobody vanishes.
+        cm = re.search(r"arrived (\d+) paid (\d+) inside (\d+) left_unpaid (\d+)", c)
+        if cm:
+            arr, paid, ins, unp = (int(x) for x in cm.groups())
+            if arr != paid + ins + unp:
+                job_bad.append("conservation: arrived %d != paid %d + inside %d + left_unpaid %d" % (arr, paid, ins, unp))
+    # Invariant: the autopilot saw no tutorial stall ("[check] STALL", main3.gd).
+    for st in re.findall(r"^\[check\] STALL[^\n]*", t, re.M)[:2]:
+        line += "\n    " + st[:200]
+        job_bad.append("stall")
     m = re.findall(r"^\[window\] \d+ s after start[^\n]*", t, re.M)
     if m: line += "\n    " + m[-1][:260]
     m = re.findall(r"^\[summary\][^\n]*", t, re.M)

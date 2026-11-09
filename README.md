@@ -1,4 +1,10 @@
-# Dhaba Rush: Highway Idle Tycoon
+# Idle Business Kit
+
+A framework for idle service-business games, built from Dhaba Rush. Start here:
+[docs/framework/README.md](docs/framework/README.md). The dhaba is its first theme; the notes
+below are Dhaba Rush's own and still apply to it.
+
+## Dhaba Rush: Highway Idle Tycoon
 
 Godot 4.7.2 (GDScript, Compatibility renderer) · Blender 5.2.2 · Android + iOS.
 Plan: [PLAN.md](PLAN.md) · Design: [docs/GDD.md](docs/GDD.md) · Store listings / ASO: [docs/aso.md](docs/aso.md)

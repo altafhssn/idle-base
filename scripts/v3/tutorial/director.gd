@@ -576,6 +576,26 @@ func current_step() -> String:
 	return _step
 
 
+## Idle Business Kit, phase 1: the world tap the current beat waits for
+## while its marker stands over the target ("station:<id>" or "galla"), "" when
+## no marker beat runs. Test drivers tap this instead of naming the dhaba's
+## counters, so the autopilot stays theme-free.
+func marker_tap_id() -> String:
+	match _step:
+		S_TAP_CHAI:
+			return "station:" + core_station()
+		S_TAP_GALLA:
+			return "galla"
+	return ""
+
+
+## The theme's first service point (the one the tutorial starts on): the
+## first id in the economy's station order.
+static func core_station() -> String:
+	var ids: Array = Game.station_ids()
+	return str(ids[0]) if not ids.is_empty() else ""
+
+
 ## True from start until done (other modules: no offline popup / auto ads).
 func is_active() -> bool:
 	return _started and _step != S_DONE

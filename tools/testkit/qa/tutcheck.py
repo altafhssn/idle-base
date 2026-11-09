@@ -36,7 +36,8 @@ import sys
 STEP_RE = re.compile(r"^\[auto\] ([\d.]+) step -> (\w+) \(cash (-?[\d.]+)\)", re.M)
 QUIT_RE = re.compile(r"^\[main3\] quit at game time [\d.]+ \(tutorial step: (\w+)\)", re.M)
 HOME_RE = re.compile(r"^\[auto\] [\d.]+ home check: (.*)$", re.M)
-DONE_STATE_RE = re.compile(r"^\[auto\] [\d.]+ done state: chai L(\d+)", re.M)
+# Idle Business Kit: the core station's id is printed (chai for the dhaba pack).
+DONE_STATE_RE = re.compile(r"^\[auto\] [\d.]+ done state: \w+ L(\d+)", re.M)
 CONS_RE = re.compile(r"^\[sim\] conservation arrived (\d+) paid (\d+) inside (\d+) left_unpaid (\d+) drove_past (\d+)", re.M)
 FILL_RE = re.compile(r"^(\[sim\] seats fill:|\[tutorial\] seats beat: filled)", re.M)
 # W3-TUT's Director (the wave that brought the C4.1 fill) reveals the meter as the waiter beat starts, before the

@@ -4,7 +4,8 @@
 # slot's own import results (.godot/ and *.import). Each slot has its own HOME, so the save stays inside it.
 set -e
 Q="$(cd "$(dirname "$0")" && pwd)"
-SLOT="$1"; SRC="${2:-/Users/almeer/Documents/HighwayDhaba}"; SRC="${SRC%/}"
+# Default source: the repo these scripts live in (tools/testkit/qa -> repo root).
+SLOT="$1"; SRC="${2:-$(cd "$Q/../../.." && pwd)}"; SRC="${SRC%/}"
 [ -n "$SLOT" ] || { echo "usage: mkslot.sh SLOT [SRC]"; exit 2; }
 DST="$Q/slots/$SLOT/proj"
 mkdir -p "$Q/slots/$SLOT/home"

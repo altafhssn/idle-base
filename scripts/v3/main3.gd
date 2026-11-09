@@ -268,10 +268,12 @@ const AUTO_HAND_DWELL := {
 ## Free-play purchases the reference player made (seconds after the
 ## tutorial's free step began, action; ref: free step at 88.0 s).
 const AUTO_FREE_SCRIPT := [
-	[17.9, "open_galla"], [18.9, "galla_upgrade_0"], [20.4, "close_panel"],
-	[32.3, "open_chai"], [33.0, "processing"], [34.6, "level_up"], [35.4, "level_up"], [39.6, "close_sheet"],
-	[41.6, "open_galla"], [42.6, "galla_upgrade_0"], [43.6, "galla_upgrade_1"], [45.6, "close_panel"],
+	[17.9, "open_checkout"], [18.9, "galla_upgrade_0"], [20.4, "close_panel"],
+	[32.3, "open_core"], [33.0, "processing"], [34.6, "level_up"], [35.4, "level_up"], [39.6, "close_sheet"],
+	[41.6, "open_checkout"], [42.6, "galla_upgrade_0"], [43.6, "galla_upgrade_1"], [45.6, "close_panel"],
 ]
+## Invariant: before the tutorial is done, something must move this often (s).
+const AUTO_STALL_S := 90.0
 
 var sim: Sim
 var camera_rig: CameraRig
@@ -392,6 +394,9 @@ var _auto_line_t: float = 0.0
 var _auto_typed_t: float = -1.0
 var _auto_hand_since: float = -1.0
 var _auto_marker_t: float = 0.0
+var _auto_prog_key: String = ""
+var _auto_prog_t: float = 0.0
+var _auto_stall_step: String = ""
 var _auto_ready_t: float = -1.0
 var _auto_free_i: int = 0
 var _auto_done_t: float = -1.0
@@ -1956,19 +1961,21 @@ func _auto_tick(delta: float) -> void:
 		if step == Director.S_FREE and _auto_free_t0 < 0.0:
 			_auto_free_t0 = _game_t
 		if step == Director.S_DONE:
-			print("[auto] %.2f done state: chai L%d cash %.2f waiters %d tables %d" % [_game_t,
-					Game.station_level("chai"), Game.cash, Game.waiter_count(), Game.table_count()])
+			var core: String = Director.core_station()
+			print("[auto] %.2f done state: %s L%d cash %.2f waiters %d tables %d" % [_game_t, core,
+					Game.station_level(core), Game.cash, Game.waiter_count(), Game.table_count()])
 	# --consent=ask: the consent card covers the game (its dim swallows taps);
 	# nothing else is tapped while it is up, and it is answered ALLOW.
 	if _auto_consent_tick():
 		return
 	# Progress signature: any change resets the no-progress counter.
 	var sig: String = "%s|%s|%s|%s|%s|%d|%d|%d|%d|%d|%d" % [step, dialogue.current_id(), str(dialogue.is_open()),
-		ui.current_panel, ui.current_popup, Game.station_level("chai"), Game.galla_count(),
-		Game.claims_total, int(Game.is_built("tandoor")), Game.waiter_count(), Game.table_count()]
+		ui.current_panel, ui.current_popup, _auto_levels_sum(), Game.galla_count(),
+		Game.claims_total, Game.built_station_ids().size(), Game.waiter_count(), Game.table_count()]
 	if sig != _auto_sig:
 		_auto_sig = sig
 		_auto_tries = 0
+	_auto_stall_check(step)
 	var hand: HandPointer = director.hand()
 	var hand_on: bool = hand != null and hand.is_showing()
 	if not hand_on:
@@ -2000,21 +2007,17 @@ func _auto_tick(delta: float) -> void:
 		if _game_t - _auto_hand_since >= float(AUTO_HAND_DWELL.get(step, AUTO_HAND_SETTLE)):
 			_auto_tap_hand(hand)
 		return
-	# 3) Marker gates (no hand) and free play.
-	match step:
-		Director.S_TAP_CHAI:
-			_auto_marker_t += delta
-			if _auto_marker_t >= AUTO_MARKER_WAIT:
-				_auto_tap_world("station:chai")
-		Director.S_TAP_GALLA:
-			_auto_marker_t += delta
-			if _auto_marker_t >= AUTO_MARKER_WAIT:
-				_auto_tap_world("galla")
-		Director.S_FREE, Director.S_DONE:
-			_auto_marker_t = 0.0
-			_auto_free(step)
-		_:
-			_auto_marker_t = 0.0
+	# 3) Marker gates (no hand): tap whatever the tutorial's marker stands
+	# over (Director.marker_tap_id), then free play.
+	var marked: String = director.marker_tap_id()
+	if marked != "":
+		_auto_marker_t += delta
+		if _auto_marker_t >= AUTO_MARKER_WAIT:
+			_auto_tap_world(marked)
+		return
+	_auto_marker_t = 0.0
+	if step == Director.S_FREE or step == Director.S_DONE:
+		_auto_free(step)
 
 
 ## Seconds since the tutorial's free step first began (game time if it never ran).
@@ -2079,12 +2082,12 @@ func _auto_home_check() -> void:
 func _auto_free_action(a: String) -> void:
 	print("[auto] %.2f free-play: %s" % [_game_t, a])
 	match a:
-		"open_galla":
+		"open_checkout":
 			if ui.current_panel == "":
 				_auto_tap_world("galla")
-		"open_chai":
+		"open_core":
 			if ui.current_panel == "":
-				_auto_tap_world("station:chai")
+				_auto_tap_world("station:" + Director.core_station())
 		"close_panel":
 			if ui.current_panel.begins_with("staff:") or ui.current_panel == "galla":
 				_auto_tap_control(ui.anchor("staff_close"), Vector2(0.5, 0.5))
@@ -2107,9 +2110,36 @@ func _auto_free_action(a: String) -> void:
 					_auto_tap_control(ui.anchor(a), Vector2(0.5, 0.5))
 
 
-## The open counter sheet's station id ("chai" when none is open).
+## The open counter sheet's station id (the core station when none is open).
 func _auto_sheet_id() -> String:
-	return ui.current_panel.substr(8) if ui.current_panel.begins_with("station:") else "chai"
+	return ui.current_panel.substr(8) if ui.current_panel.begins_with("station:") else Director.core_station()
+
+
+## Sum of every station's level (the progress signature; theme-free).
+func _auto_levels_sum() -> int:
+	var n: int = 0
+	for id in Game.station_ids():
+		n += Game.station_level(str(id))
+	return n
+
+
+## Invariant check (Idle Business Kit, phase 1): before the tutorial is done,
+## something must move at least every AUTO_STALL_S of game time: the step,
+## the line, a panel, a sale. Otherwise "[check] STALL" is printed once per
+## step (the suite parser fails on it).
+func _auto_stall_check(step: String) -> void:
+	var sales: int = sim.sales_count if sim != null else 0
+	var key: String = "%s|%s|%s|%d" % [step, dialogue.current_id(), ui.current_panel, sales]
+	if key != _auto_prog_key:
+		_auto_prog_key = key
+		_auto_prog_t = _game_t
+		return
+	if step == Director.S_DONE or step == _auto_stall_step:
+		return
+	if _game_t - _auto_prog_t >= AUTO_STALL_S:
+		_auto_stall_step = step
+		print("[check] STALL: no progress for %.0f s at step %s (line '%s', panel '%s', sales %d)" % [
+				_game_t - _auto_prog_t, step, dialogue.current_id(), ui.current_panel, sales])
 
 
 ## Round 2 step 2: a player does not tap a price he cannot pay (the seats
